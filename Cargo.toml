@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "fastslam",
+    "simulator"
+]
