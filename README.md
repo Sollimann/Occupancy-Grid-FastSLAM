@@ -5,7 +5,7 @@ A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle
 [1] Dataset: MIT CSAIL Building. http://ais.informatik.uni-freiburg.de/slamevaluation/datasets.php
 
 # References
-[1] Thrun et.al., Probabilistic Robotics
+[1] Thrun et.al., Probabilistic Robotics. See resources folder.
 
 [2] Dr.Cyrill Stachniss, Robot Mapping course, University of Freiburg. https://www.youtube.com/watch?v=3Yl2aq28LFQ&index=15&list=PLgnQpQtFTOGQrZ4O5QzbIHgl3b1JHimN_
 
