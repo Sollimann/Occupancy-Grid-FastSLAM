@@ -5,7 +5,10 @@ use prost_types::Timestamp;
 
 #[derive(Debug, Deserialize)]
 struct SensorData {
-    laser: LaserScan,
+    start_angle: f64,
+    angular_resolution: f64,
+    maximum_range: f64,
+    ranges: Vec<f64>,
     pose: Pose,
     timestamp: f64
 }
@@ -42,10 +45,10 @@ pub fn load() -> Vec<crate::sensors_proto::SensorData> {
                 theta: sensor_data.pose.theta,
             }),
             laser: Some(crate::sensors_proto::LaserScan {
-                start_angle: sensor_data.laser.start_angle,
-                angular_resolution: sensor_data.laser.angular_resolution,
-                maximum_range: sensor_data.laser.maximum_range,
-                ranges: sensor_data.laser.ranges
+                start_angle: sensor_data.start_angle,
+                angular_resolution: sensor_data.angular_resolution,
+                maximum_range: sensor_data.maximum_range,
+                ranges: sensor_data.ranges
             }),
         })
         .collect()
