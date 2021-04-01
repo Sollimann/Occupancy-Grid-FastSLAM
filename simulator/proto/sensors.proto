@@ -13,7 +13,6 @@
 // limitations under the License.
 
 syntax = "proto3";
-import "google/protobuf/timestamp.proto";
 
 package sensors;
 
@@ -48,5 +47,5 @@ message LaserScan {
 message SensorData {
   LaserScan laser = 1;
   Pose pose = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  double timestamp = 3;
 }

@@ -1,3 +1,5 @@
+mod data;
+
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::stream;
