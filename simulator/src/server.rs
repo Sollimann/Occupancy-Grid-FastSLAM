@@ -13,6 +13,8 @@ pub mod sensors_proto {
 use sensors_proto::sensors_server::{Sensors, SensorsServer};
 use sensors_proto::{Pose, LaserScan, SensorData, SensorsRequest};
 use tonic::transport::Server;
+use tokio::time::Duration;
+use std::thread;
 
 #[derive(Debug)]
 pub struct SensorsService {
@@ -29,7 +31,9 @@ impl Sensors for SensorsService {
         &self,
         request: Request<SensorsRequest>,
     ) -> Result<Response<Self::ListDataStream>, Status> {
-        println!("ListFeatures = {:?}", request);
+        let freq: u32 = request.into_inner().stream_frequency;
+        let secs: f32 = 1.0 / (freq as f32);
+        let millis: u64 = (secs * 1000.0) as u64;
 
         let (tx, rx) = mpsc::channel(4);
         let sensor_data = self.sensor_data.clone();
@@ -37,6 +41,7 @@ impl Sensors for SensorsService {
         tokio::spawn(async move {
             for data in &sensor_data[..] {
                 println!("  => send {:?}", data);
+                thread::sleep(Duration::from_millis(millis));
                 tx.send(Ok(data.clone())).await.unwrap();
             }
 

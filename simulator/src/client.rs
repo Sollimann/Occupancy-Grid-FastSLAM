@@ -11,7 +11,7 @@ use tonic::Request;
 
 async fn print_sensor_data(client: &mut SensorsClient<Channel>) -> Result<(), Box<dyn Error>> {
     let freq = SensorsRequest {
-        stream_frequency: 10
+        stream_frequency: 100
     };
 
     let mut stream = client
