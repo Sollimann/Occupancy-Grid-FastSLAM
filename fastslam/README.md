@@ -1,7 +1,7 @@
 
 ## The SLAM Problem
 
-<img src="https://d3i71xaburhd42.cloudfront.net/f29bff9cf75ed6f632cead2a57552f03e7188df6/12-Figure37.8-1.png" alt="drawing" style=" width: 300px" />
+<img src="http://aslanfmh65.com/wp-content/uploads/2019/07/Screen-Shot-2019-07-10-at-10.19.49-AM.jpg" alt="drawing" style=" width: 300px:" />
 
 From a probabilistic perspective, there are two main forms of the SLAM problem, which are both of equal practical importance.
 One is known as the *online SLAM Problem* and the *full SLAM Problem*
