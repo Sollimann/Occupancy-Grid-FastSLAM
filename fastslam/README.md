@@ -1,7 +1,7 @@
 
 ## The SLAM Problem
 
-<img src="https://d3i71xaburhd42.cloudfront.net/f29bff9cf75ed6f632cead2a57552f03e7188df6/12-Figure37.8-1.png" alt="drawing" style=" width: 300px:" />
+<img src="https://d3i71xaburhd42.cloudfront.net/f29bff9cf75ed6f632cead2a57552f03e7188df6/12-Figure37.8-1.png" alt="drawing" style=" width: 300px" />
 
 From a probabilistic perspective, there are two main forms of the SLAM problem, which are both of equal practical importance.
 One is known as the *online SLAM Problem* and the *full SLAM Problem*
@@ -10,7 +10,7 @@ One is known as the *online SLAM Problem* and the *full SLAM Problem*
 
 The online SLAM problem involves estimating the posterior over the momentary pose along with the map
 
-<img src="https://latex.codecogs.com/gif.latex?p(x_t&space;,&space;m&space;|&space;x_{t})" /> 
+<img src="https://latex.codecogs.com/gif.latex?\inline&space;p(x_t&space;,&space;m&space;|&space;z_{1:t},&space;u_{1:t})" /> 
 
 Here <img src="https://latex.codecogs.com/gif.latex?\inline&space;x_{t}" /> is the pose at time *t*, *m* is the map,
 and <img src="https://latex.codecogs.com/gif.latex?\inline&space;z_{1:t}" /> and 
