@@ -1,4 +1,44 @@
 
+## The SLAM Problem
+
+<img src="https://d3i71xaburhd42.cloudfront.net/f29bff9cf75ed6f632cead2a57552f03e7188df6/12-Figure37.8-1.png" alt="drawing" style=" width: 300px:" />
+
+From a probabilistic perspective, there are two main forms of the SLAM problem, which are both of equal practical importance.
+One is known as the *online SLAM Problem* and the *full SLAM Problem*
+
+#### Online SLAM Problem
+
+The online SLAM problem involves estimating the posterior over the momentary pose along with the map
+
+<img src="https://latex.codecogs.com/gif.latex?p(x_t&space;,&space;m&space;|&space;x_{t})" /> 
+
+Here <img src="https://latex.codecogs.com/gif.latex?\inline&space;x_{t}" /> is the pose at time *t*, *m* is the map,
+and <img src="https://latex.codecogs.com/gif.latex?\inline&space;z_{1:t}" /> and 
+<src img="https://latex.codecogs.com/gif.latex?\inline&space;u_{1:t}" /> are the measurements and controls, respectively.
+The problem is called the online SLAM problem since it only involves the estimation of variables that persist at time *t*.
+Many SLAM problems are incremental, meaning they discard past measurements and controls once they have been processed.
+
+## FastSLAM algorithm for Occupancy Grid Maps
+
+The FastSLAM algorithm uses particle filters (*Rao-Blackwellized particle filters*) for estimating the robot path. This means
+that for each of these particles (believes) the individual map errors are *conditionally independent*. Hence the mapping problem
+can be factored into many separate problems, one for each feature in the map. FastSLAM estimates these map feature locations by EKFs
+, but using a separate low-dimensional EKF for each individual feature. This is fundamentally different from most SLAM
+algorithms which tend to all use a single Gaussian distribution to estimate the location of all features jointly.
+
+#### Advantages of FastSLAM
+
+The key advantage of FastSLAM, however, stems from the fact that data association (determining the correct mapping
+of observations to landmark/particle) decisions can be made on a per-particle basis.
+As a result, the filter maintains posteriors over multiple data associations, not just the most likely one. This is in stark
+contrast to most SLAM algorithms, which track only a single data association at any point in time. In fact, by sampling over
+data associations, FastSLAM approcimates the full posterior, not just hte maximum likelihood data association. The ability
+to pursue multiple data associations simultanesouly makes FastSLAM significantly more robust to data assosciation problems
+than algorithms based on incremental maximum likelihood data association. Another advantage of FastSLAM over other SLAM
+algorithms arises from the fact that particle filters can cope with non-linear robot motion models, whereas previous
+techniques approximate such models via linear functions. This is important when the kinematics are highly non-linear, or when
+the pose uncertainty is relatively high.
+
 ## The Occupancy Grid Mapping Algorithm
 
 **Occupancy grid mapping** addresses the problem of generating consistent maps from noisy and uncertain measurement data,
@@ -39,4 +79,3 @@ a binary problem with static state. This decomposition is convenient but not wit
 enable us to represent dependencies among neighboring cells; instead, the posterior over maps is approximated as the product of its marginals:
 
 <img src="https://latex.codecogs.com/gif.latex?p&space;(m_i&space;|&space;z_{1:t},&space;x_{1:t})&space;=&space;\prod_{i}&space;p&space;(\boldsymbol{m}_i&space;|&space;z_{1:t},&space;x_{1:t})" />
-
