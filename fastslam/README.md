@@ -18,6 +18,15 @@ and <img src="https://latex.codecogs.com/gif.latex?\inline&space;z_{1:t}" /> and
 The problem is called the online SLAM problem since it only involves the estimation of variables that persist at time *t*.
 Many SLAM problems are incremental, meaning they discard past measurements and controls once they have been processed.
 
+#### Full SLAM Problem
+
+The second SLAM problem is called *full SLAM problem*. In full SLAM, we seek to calculate a posterior over the entire path
+<src img="https://latex.codecogs.com/gif.latex?\inline&space;x_{1:t}" /> along with the map instead of just the current
+pose  <src img="https://latex.codecogs.com/gif.latex?\inline&space;x_{t}" /> :
+
+<img src="https://latex.codecogs.com/gif.latex?p(x_{t:1}&space;,&space;m&space;|&space;z_{1:t},&space;u_{1:t})" />
+
+
 ## FastSLAM algorithm for Occupancy Grid Maps
 
 The FastSLAM algorithm uses particle filters (*Rao-Blackwellized particle filters*) for estimating the robot path. This means
