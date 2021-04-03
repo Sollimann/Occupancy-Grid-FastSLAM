@@ -48,6 +48,11 @@ algorithms arises from the fact that particle filters can cope with non-linear r
 techniques approximate such models via linear functions. This is important when the kinematics are highly non-linear, or when
 the pose uncertainty is relatively high.
 
+The use of particle filters creates the unusual situation that FastSLAM solves both the *full SLAM problem* and the 
+*online SLAM problem*. As we shall see, FastSLAM is formulated to calculate the full path posterior - only the full
+path renders the landmark/map estimates conditionally independent. However, because particle filters estimate one pose
+at-a-time, FastSLAM is indeed an online algorithm. Hence it also solves the online SLAM problem. 
+
 ## The Occupancy Grid Mapping Algorithm
 
 **Occupancy grid mapping** addresses the problem of generating consistent maps from noisy and uncertain measurement data,
