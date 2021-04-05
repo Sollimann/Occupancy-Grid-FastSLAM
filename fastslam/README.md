@@ -53,6 +53,37 @@ The use of particle filters creates the unusual situation that FastSLAM solves b
 path renders the landmark/map estimates conditionally independent. However, because particle filters estimate one pose
 at-a-time, FastSLAM is indeed an online algorithm. Hence it also solves the online SLAM problem. 
 
+## FastSLAM Occupancy Grid Pseudo Code
+
+```python
+// args:
+// X_{t-1} : 
+def fn(X_{t-1}: Set[Pose], u_t: (u, w), z_t: List[int]):
+    X_t = {} // empty set
+    
+    // loop through all particles
+    for k = 1 to M:
+    
+        // given the current pose of the k-th particle
+        // 
+        x_t = sample_motion_model_velocity(u_t, x_{t-1})
+
+        // compute the likelihood of the measurement z_t given the pose x_t represented by the k-th particle and given
+        // the map m_{t-1} computed based on previous measurement and the trajectory represented by this particle
+        w_t = measurement_model_map(z_t, x_t, m_{t-1})
+        
+        // compute a new occupancy grid map, given the current pose x_t of the k-th particle, the map m_{t-1} associated to it
+        // and the measurement z_t
+        m_t = updated_occupancy_grid(z_t, x_t, m_{t-1})
+
+        
+```
+
+
+## motion model velocity equation
+
+<img src="https://latex.codecogs.com/gif.latex?\left(\begin{array}{l}&space;x'&space;\\&space;y'&space;\\&space;\theta'&space;\end{array}\right)&space;=\left(\begin{array}{l}&space;x&space;\\&space;y&space;\\&space;\theta&space;\end{array}\right)&plus;\left(\begin{array}{c}&space;-\frac{v}{\omega}&space;\sin&space;\theta&plus;\frac{v}{\omega}&space;\sin&space;(\theta&plus;\omega&space;\Delta&space;t)&space;\\&space;\frac{v}{\omega}&space;\cos&space;\theta-\frac{v}{\omega}&space;\cos&space;(\theta&plus;\omega&space;\Delta&space;t)&space;\\&space;\omega&space;\Delta&space;t&space;\end{array}\right)" />
+
 ## The Occupancy Grid Mapping Algorithm
 
 **Occupancy grid mapping** addresses the problem of generating consistent maps from noisy and uncertain measurement data,
