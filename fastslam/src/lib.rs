@@ -1,3 +1,5 @@
+mod occupancy_grid;
+
 #[cfg(test)]
 mod tests {
     #[test]
