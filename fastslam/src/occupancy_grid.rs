@@ -1,20 +1,13 @@
-use image::io::Reader as ImageReader;
-use image::{RgbImage, ImageBuffer};
-
 #[derive(Debug)]
 pub struct OccupancyGrid {
-    pub map: RgbImage
 }
 
 impl OccupancyGrid {
 
-    pub fn new(width: u32, height: u32) -> Self {
-        let map: RgbImage = ImageBuffer::new(width, height);
+    pub fn new(width: u32, height: u32) {
+    }
 
-        let mut occ_grid = Self {
-            map
-        };
+    pub fn load() {
 
-        return occ_grid
     }
 }

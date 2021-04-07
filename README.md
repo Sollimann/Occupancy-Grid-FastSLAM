@@ -1,6 +1,20 @@
 # Occupancy Grid FastSLAM
 A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle Filters
 
+# Consume
+
+#### Requirements
+
+```bash
+$ sudo apt-get install libsdl2-dev
+```
+
+#### Run (to run gt map)
+
+```bash
+$ cargo run --bin display_image
+```
+
 # Datasets
 [1] Dataset: MIT CSAIL Building. https://lucacarlone.mit.edu/datasets/
 
