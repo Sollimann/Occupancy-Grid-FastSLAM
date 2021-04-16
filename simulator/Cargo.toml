@@ -8,8 +8,12 @@ edition = "2018"
 
 [dependencies]
 fastslam = { path = "../fastslam"}
-
+pistoncore-sdl2_window = "0.67.0"
+piston = "0.53.0"
+piston2d-graphics = "0.40.0"
+piston_window = "0.119.0"
+piston2d-opengl_graphics = "0.78.0"
 
 [[bin]]
- name = "run-simulator"
+name = "vacuum-robot-simulator"
 path = "src/run.rs"
