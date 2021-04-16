@@ -1,2 +1,4 @@
 pub mod occupancy_grid;
-pub mod display_image;
+pub mod load_map;
+pub mod geometry;
+pub mod math;

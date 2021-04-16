@@ -18,7 +18,3 @@ imageproc = { version = "0.22.0", features = ["display-window"] }
 [lib]
 name = "fastslam"
 path = "src/lib.rs"
-
-[[bin]]
-name = "display_image"
-path = "src/display_image.rs"
