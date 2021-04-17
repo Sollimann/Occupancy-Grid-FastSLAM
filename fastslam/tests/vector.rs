@@ -107,6 +107,15 @@ fn test_vector_products() {
     cross_prod = u.cross(v);
     diff = compute_abs_diff(cross_prod, -3.0);
     assert!(diff < 1e-10);
+
+    let q = Vector::new(3.0, 2.0);
+    let p = Vector::new(2.5, 5.2);
+    let r = Vector::new(2.0, 2.0);
+
+    let one = (q-p).cross(r);
+    let two = (p-q).cross(r);
+
+    assert_eq!(one, -two);
 }
 
 #[test]
