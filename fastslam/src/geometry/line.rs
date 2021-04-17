@@ -33,7 +33,6 @@ impl Target for Line {
 
         let det = p_to_r.cross(q_to_s);
 
-        println!("det: {}", det);
         // if the cross product is zero, then the vectors are parallel or co-linear
         // which means that they will never cross however long they are
         if det == 0.0 {
@@ -46,8 +45,6 @@ impl Target for Line {
 
             let t = (q_minus_p).cross(q_to_s) / det;
 
-
-            println!("u: {} and t: {}", u, t);
             if t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0 {
                 vec![point_of_intersect]
             } else {
