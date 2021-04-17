@@ -13,6 +13,7 @@ piston = "0.53.0"
 piston2d-graphics = "0.40.0"
 piston_window = "0.119.0"
 piston2d-opengl_graphics = "0.78.0"
+svg2polylines = "0.5.2"
 
 [[bin]]
 name = "vacuum-robot-simulator"

@@ -2,16 +2,7 @@ use std::env;
 use fastslam::geometry::vector::Vector;
 use fastslam::math::scalar::{PI, Angle};
 use std::f64;
-
-fn compute_vector_abs_diff(u: Vector, v: Vector) -> (f64, f64) {
-    let abs_difference_x = (u.x - v.x).abs();
-    let abs_difference_y = (u.y - v.y).abs();
-    (abs_difference_x, abs_difference_y)
-}
-
-fn compute_abs_diff(actual: f64, compared: f64) -> f64 {
-    (actual - compared).abs()
-}
+use fastslam::math::utils::{compute_vector_abs_diff, compute_abs_diff};
 
 #[test]
 fn test_create_vector_from_angle() {
