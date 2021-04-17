@@ -33,7 +33,7 @@ impl ops::Sub for Vector {
     type Output = Vector;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vector::new(self.x - rhs.x, self.y + rhs.y)
+        Vector::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -60,7 +60,7 @@ impl Vector {
         Vector {x, y}
     }
 
-    /// if a ray hits me from this angle, what is the unit Vector of this ray
+    /// return the unit vector for a given angle
     pub fn from_angle(rad: Angle) -> Vector {
         // 0° is in forward direction (along X-axis)
         // 90° is to the left (along Y-axis)

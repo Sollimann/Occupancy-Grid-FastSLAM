@@ -13,7 +13,6 @@ edition = "2018"
 piston_window = "0.116.0"
 image = { version = "0.23.6", default-features = true }
 imageproc = { version = "0.22.0", features = ["display-window"] }
-#sdl2 = { version = "0.34.2", optional = true, default-features = false, features = ["bundled"] }
 
 [lib]
 name = "fastslam"
