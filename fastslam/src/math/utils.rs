@@ -10,3 +10,8 @@ pub fn compute_vector_abs_diff(u: Vector, v: Vector) -> (f64, f64) {
 pub fn compute_abs_diff(actual: Scalar, compared: Scalar) -> f64 {
     (actual - compared).abs()
 }
+
+
+pub fn sigmoid(x: Scalar) -> Scalar {
+    x.exp() / (1.0 + x.exp())
+}
