@@ -1,8 +1,8 @@
-use fastslam::geometry::point::Point;
 use fastslam::geometry::line::Line;
+use fastslam::geometry::point::Point;
 use fastslam::geometry::ray::Ray;
-use fastslam::geometry::vector::Vector;
 use fastslam::geometry::target::Target;
+use fastslam::geometry::vector::Vector;
 
 #[test]
 fn test_line_and_raycast_intersection() {
@@ -16,7 +16,7 @@ fn test_line_and_raycast_intersection() {
     let len = intersection_point.len();
     assert_eq!(len, 1);
     if len == 1 {
-        assert_eq!(intersection_point[0], Point::new(0.0,0.0));
+        assert_eq!(intersection_point[0], Point::new(0.0, 0.0));
     }
 }
 
@@ -58,7 +58,7 @@ fn test_line_and_raycast_intersection_neg_sign() {
     let len = intersection_point.len();
     assert_eq!(len, 1);
     if len == 1 {
-        assert_eq!(intersection_point[0], Point::new(0.0,0.0));
+        assert_eq!(intersection_point[0], Point::new(0.0, 0.0));
     }
 }
 

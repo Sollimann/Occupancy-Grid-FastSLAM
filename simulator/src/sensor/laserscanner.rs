@@ -1,10 +1,10 @@
-use fastslam::odometry::pose::Pose;
 use fastslam::geometry::line::Line;
-use fastslam::sensor::laserscanner::{Scan, Measurement};
 use fastslam::geometry::point::Point;
-use fastslam::math::scalar::{Angle, Scalar, PI};
 use fastslam::geometry::ray::Ray;
 use fastslam::geometry::target::Target;
+use fastslam::math::scalar::{Angle, Scalar, PI};
+use fastslam::odometry::pose::Pose;
+use fastslam::sensor::laserscanner::{Measurement, Scan};
 use std::cmp::Ordering;
 
 pub struct LaserScanner {
@@ -17,7 +17,6 @@ pub struct LaserScanner {
 impl LaserScanner {
     pub fn scan(&self, pose: &Pose, targets: &[Line]) -> Scan {
         let mut scan = Scan::empty();
-
 
         // comparison function to find distance from robot pose to a laser scan point
         //let distance = |p: &Point| (*p - pose.position).length();
@@ -36,14 +35,14 @@ impl LaserScanner {
 
             // only take the point closest to the sensor (first point of collision)
             let closest = points.iter().min_by(|p1, p2| {
-                distance(p1).partial_cmp(&distance(p2))
+                distance(p1)
+                    .partial_cmp(&distance(p2))
                     .unwrap_or(Ordering::Equal)
             });
 
             if let Some(p) = closest {
                 scan.add(Measurement::new(col_angle, distance(p)))
             }
-
         }
 
         scan

@@ -1,5 +1,5 @@
-use fastslam::geometry::ray::Ray;
 use fastslam::geometry::point::Point;
+use fastslam::geometry::ray::Ray;
 use fastslam::geometry::vector::Vector;
 
 #[test]

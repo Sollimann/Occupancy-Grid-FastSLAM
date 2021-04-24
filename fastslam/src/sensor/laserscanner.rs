@@ -1,10 +1,9 @@
+use crate::geometry::point::Point;
+use crate::geometry::vector::Vector;
 use crate::math::scalar::{Angle, Scalar};
 use crate::odometry::pose::Pose;
-use crate::geometry::vector::Vector;
 use crate::pointcloud::PointCloud;
-use rayon::slice::{Iter, IterMut};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use crate::geometry::point::Point;
+use std::slice::Iter;
 
 /// A single measurement (distance reading) of a laser scanner.
 #[derive(Debug, Clone, Copy)]
@@ -28,7 +27,7 @@ impl Measurement {
 
 /// A full 360° scan from a laser scanner.
 pub struct Scan {
-    measurements: Vec<Measurement>,
+    pub measurements: Vec<Measurement>,
 }
 
 impl Scan {
@@ -43,15 +42,10 @@ impl Scan {
     }
 
     pub fn iter(&self) -> Iter<Measurement> {
-        self.measurements.par_iter()
+        self.measurements.iter()
     }
 
     pub fn to_pointcloud(&self, pose: &Pose) -> PointCloud {
-        PointCloud::new(
-            self
-                .iter()
-                .map(|m| m.to_point(pose))
-                .collect(),
-        )
+        PointCloud::new(self.iter().map(|m| m.to_point(pose)).collect())
     }
 }
