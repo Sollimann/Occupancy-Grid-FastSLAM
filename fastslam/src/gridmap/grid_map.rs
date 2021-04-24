@@ -19,7 +19,7 @@ impl Default for CellState {
 }
 
 pub struct GridMap {
-    map_size: usize, // assuming quadratic map, with (0,0) in the middle
+    pub map_size: usize, // assuming quadratic map, with (0,0) in the middle
     pub cells: Vec<Vec<CellState>>,
     cell_size: Scalar, // in meter
 }
@@ -54,10 +54,6 @@ impl GridMap {
 
     pub fn clear(&mut self) {
         self.cells = vec![vec![CellState::Void; self.map_size]; self.map_size]
-    }
-
-    pub fn get_map_size(self) -> (usize, usize) {
-        (self.map_size, self.map_size)
     }
 
     pub fn update(&mut self, pose: &Pose, scan: &mut Scan) {

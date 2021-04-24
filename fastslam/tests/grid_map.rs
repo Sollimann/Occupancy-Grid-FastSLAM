@@ -10,9 +10,6 @@ fn test_initialize_grid() {
     let grid = GridMap::default();
     let state = grid.cell_state(30, 30).unwrap();
     assert_eq!(state, &CellState::Void);
-
-    let (x_s, y_s) = grid.get_map_size();
-    assert_eq!(x_s, y_s)
 }
 
 #[test]

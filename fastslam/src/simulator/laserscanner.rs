@@ -1,11 +1,8 @@
-use fastslam::geometry::line::Line;
-use fastslam::geometry::point::Point;
-use fastslam::geometry::ray::Ray;
-use fastslam::geometry::target::Target;
-use fastslam::math::scalar::{Angle, Scalar, PI};
-use fastslam::odometry::pose::Pose;
-use fastslam::sensor::laserscanner::{Measurement, Scan};
 use std::cmp::Ordering;
+use crate::odometry::Pose;
+use crate::geometry::{Line, Point, Ray, Target};
+use crate::sensor::laserscanner::{Scan, Measurement};
+use crate::math::scalar::{Scalar, Angle, PI};
 
 pub struct LaserScanner {
     pub num_columns: u32,
