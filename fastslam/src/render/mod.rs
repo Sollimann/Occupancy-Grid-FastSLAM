@@ -1,10 +1,13 @@
 use crate::geometry;
+use crate::simulator;
 use crate::gridmap::grid_map::{GridMap, CellState};
 use opengl_graphics::GlGraphics;
 use graphics::math::Matrix2d;
 use graphics;
-use graphics::{DrawState, Rectangle};
+use graphics::{DrawState, Rectangle, Transformed};
 use crate::gridmap::grid_map::CellState::{Occupied, Freespace};
+use crate::pointcloud::PointCloud;
+use rayon::iter::ParallelIterator;
 
 pub struct RenderConfig {
     pub scale: f64
@@ -24,17 +27,6 @@ pub trait Draw {
     fn draw(&self, config: RenderConfig, transform: Matrix2d, gl: &mut GlGraphics);
 }
 
-impl Draw for geometry::Line {
-    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
-        let line = graphics::Line::new(WHITE, 1.0);
-
-        let (x1, y1) = config.pixel_coords(self.start);
-        let (x2, y2) = config.pixel_coords(self.end);
-        let coords: [f64; 4] = [x1, y1, x2, y2];
-
-        line.draw(coords, &DrawState::default(), transform, gl);
-    }
-}
 impl Draw for GridMap {
     fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
         let size = self.map_size;
@@ -74,6 +66,70 @@ impl Draw for GridMap {
                     _ => {}
                 }
             }
+        }
+    }
+}
+
+// for simulator
+impl Draw for geometry::Line {
+    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+        let line = graphics::Line::new(WHITE, 1.0);
+
+        let (x1, y1) = config.pixel_coords(self.start);
+        let (x2, y2) = config.pixel_coords(self.end);
+        let coords: [f64; 4] = [x1, y1, x2, y2];
+
+        line.draw(coords, &DrawState::default(), transform, gl);
+    }
+}
+
+impl Draw for simulator::Robot {
+    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+        let robot_color = graphics::color::hex("ffd42a");
+        let robot_circ = graphics::ellipse::Ellipse {
+            color: robot_color,
+            border: None,
+            resolution: 64
+        };
+
+        let robot_radius = config.scale;
+        let pos = self.odom.pose.position;
+        let (px, py) = config.pixel_coords(pos);
+
+        // draw robot body in position
+        robot_circ.draw(
+            [0.0, 0.0, robot_radius, robot_radius],
+            &Default::default(),
+            transform.trans(px - robot_radius / 2.0, py - robot_radius / 2.0),
+            gl
+        );
+
+        // draw robot heading angle
+        let line = graphics::Line::new(robot_color, 1.0);
+        let (hx ,hy) = config.pixel_coords(
+            pos + geometry::Vector::from_angle(self.odom.pose.heading) * config.scale * 0.05
+        );
+        line.draw([px, py, hx, hy], &DrawState::default(), transform, gl);
+    }
+}
+
+impl Draw for PointCloud {
+    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+        let point = graphics::ellipse::Ellipse {
+            color: graphics::color::hex("1a1a1a"),
+            border: None,
+            resolution: 32
+        };
+        let point_radius = 0.25 * config.scale;
+        for &p in self.iter() {
+            let (px, py) = config.pixel_coords(p);
+
+            point.draw(
+                [0.0, 0.0, point_radius, point_radius],
+                &Default::default(),
+                transform.trans(px - point_radius / 2.0, py - point_radius / 2.0),
+                gl
+            )
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::fmt;
 use rayon::iter::{IntoParallelRefIterator, IntoParallelRefMutIterator};
-use rayon::slice::{Iter, IterMut};
+use rayon::slice;
 use crate::geometry::point::Point;
 
 #[derive(Debug, Clone)]
@@ -32,11 +32,15 @@ impl PointCloud {
         self.points.push(p);
     }
 
-    pub fn iter(&self) -> Iter<Point> {
+    pub fn iter(&self) -> std::slice::Iter<Point> {
+        self.points.iter()
+    }
+
+    pub fn par_iter(&self) -> rayon::slice::Iter<Point> {
         self.points.par_iter()
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<Point> {
+    pub fn iter_mut(&mut self) -> rayon::slice::IterMut<Point> {
         self.points.par_iter_mut()
     }
 }
