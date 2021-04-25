@@ -8,6 +8,7 @@ use graphics::{DrawState, Rectangle, Transformed};
 use crate::gridmap::grid_map::CellState::{Occupied, Freespace};
 use crate::pointcloud::PointCloud;
 use rayon::iter::ParallelIterator;
+use crate::particlefilter::ParticleFilter;
 
 pub struct RenderConfig {
     pub scale: f64
@@ -16,19 +17,22 @@ pub struct RenderConfig {
 impl RenderConfig {
     pub fn pixel_coords(&self, p: geometry::Point) -> (f64, f64) {
         // might want to revisit the signs
-        //(self.scale * (p.x as f64), -self.scale * (p.y as f64))
-        (self.scale * (p.x as f64), self.scale * (p.y as f64))
+        (-self.scale * (p.y as f64), -self.scale * (p.x as f64))
+        //(self.scale * (p.x as f64), self.scale * (p.y as f64))
     }
 }
 
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
 pub trait Draw {
-    fn draw(&self, config: RenderConfig, transform: Matrix2d, gl: &mut GlGraphics);
+    /// config: For mapping point to pixel
+    /// transform: Transformation matrix
+    /// gl: The graphics implementation used to actually draw something on screen
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics);
 }
 
 impl Draw for GridMap {
-    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let size = self.map_size;
         let cell_size = 0.1 * config.scale;
 
@@ -44,9 +48,10 @@ impl Draw for GridMap {
 
         // draw cells
         let mut draw_cell = |rect: Rectangle, r, c| {
-            let x = (c as f64) * cell_size;
-            // let y = -(r as f64) * cell_size;
-            let y = (r as f64) * cell_size; // this might be wrong sgn
+            // let x = (c as f64) * cell_size;
+            // let y = -(r as f64) * cell_size; // this might be wrong sgn
+            let x = -(r as f64) * cell_size;
+            let y = -(c as f64) * cell_size; // this might be wrong sgn
 
             rect.draw(
                 [x, y, cell_size, cell_size],
@@ -70,9 +75,18 @@ impl Draw for GridMap {
     }
 }
 
+impl Draw for ParticleFilter {
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
+
+        // move the gridmap view to the top left corner of screen
+        let transform_gridmap = transform.trans(-450.0, 0.0);
+        self.gridmap.draw(config, transform_gridmap, gl);
+    }
+}
+
 // for simulator
 impl Draw for geometry::Line {
-    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let line = graphics::Line::new(WHITE, 1.0);
 
         let (x1, y1) = config.pixel_coords(self.start);
@@ -84,7 +98,7 @@ impl Draw for geometry::Line {
 }
 
 impl Draw for simulator::Robot {
-    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let robot_color = graphics::color::hex("ffd42a");
         let robot_circ = graphics::ellipse::Ellipse {
             color: robot_color,
@@ -114,7 +128,7 @@ impl Draw for simulator::Robot {
 }
 
 impl Draw for PointCloud {
-    fn draw(&self, config: RenderConfig, transform: [[f64; 3]; 2], gl: &mut GlGraphics) {
+    fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let point = graphics::ellipse::Ellipse {
             color: graphics::color::hex("1a1a1a"),
             border: None,

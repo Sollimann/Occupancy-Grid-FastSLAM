@@ -56,7 +56,7 @@ impl GridMap {
         self.cells = vec![vec![CellState::Void; self.map_size]; self.map_size]
     }
 
-    pub fn update(&mut self, pose: &Pose, scan: &mut Scan) {
+    pub fn update(&mut self, pose: &Pose, scan: &Scan) {
         use self::CellState::*;
         for &m in scan.iter() {
             let p = m.to_point(pose);
