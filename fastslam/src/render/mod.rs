@@ -15,7 +15,7 @@ pub struct RenderConfig {
 }
 
 impl RenderConfig {
-    pub fn pixel_coords(&self, p: geometry::Point) -> (f64, f64) {
+    pub fn pixel_coords(&self, p: geometry::Vector) -> (f64, f64) {
         // might want to revisit the signs
         (-self.scale * (p.y as f64), -self.scale * (p.x as f64))
         //(self.scale * (p.x as f64), self.scale * (p.y as f64))
@@ -138,7 +138,7 @@ impl Draw for PointCloud {
         };
         let point_radius = 0.25 * config.scale;
         for &p in self.iter() {
-            let (px, py) = config.pixel_coords(p);
+            let (px, py) = config.pixel_coords(p.to_vector());
 
             point.draw(
                 [0.0, 0.0, point_radius, point_radius],

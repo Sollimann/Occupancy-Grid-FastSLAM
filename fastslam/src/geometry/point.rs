@@ -78,6 +78,14 @@ impl Point {
         self.to_point_vec(p).length()
     }
 
+    pub fn from_vector(pos: Vector) -> Point {
+        Point { x: pos.x, y: pos.y }
+    }
+
+    pub fn to_vector(&self) -> Vector {
+        Vector::new(self.x, self.y)
+    }
+
     pub fn angle_to_point(&self, p: Point) -> Angle {
         let vec = self.to_point_vec(p);
         vec.angle()

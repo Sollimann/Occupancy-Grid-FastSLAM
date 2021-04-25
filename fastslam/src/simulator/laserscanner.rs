@@ -16,8 +16,8 @@ impl LaserScanner {
         let mut scan = Scan::empty();
 
         // comparison function to find distance from robot pose to a laser scan point
-        //let distance = |p: &Point| (*p - pose.position).length();
-        let distance = |p: &Point| (pose.position.to_point_vec(*p)).length();
+        let distance = |p: &Point| (p.to_vector() - pose.position).length();
+        // let distance = |p: &Point| (pose.position.to_point_vec(*p)).length();
 
         // Raycasting
         for col in 0..self.num_columns {

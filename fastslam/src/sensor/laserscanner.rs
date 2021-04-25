@@ -17,11 +17,16 @@ impl Measurement {
         Measurement { angle, distance }
     }
 
-    pub fn to_point(&self, pose: &Pose) -> Point {
+    pub fn to_point(&self, pose: &Pose) -> Vector {
         let p0 = pose.position;
         let direction = Vector::from_angle(pose.heading + self.angle);
         let p1 = p0 + direction * self.distance;
         p1
+    }
+
+    pub fn to_vector(&self, pose: &Pose) -> Vector {
+        let direction = Vector::from_angle(pose.heading + self.angle);
+        pose.position + direction * self.distance
     }
 }
 
@@ -46,6 +51,12 @@ impl Scan {
     }
 
     pub fn to_pointcloud(&self, pose: &Pose) -> PointCloud {
-        PointCloud::new(self.iter().map(|m| m.to_point(pose)).collect())
+        PointCloud::new(
+            self.measurements
+                .iter()
+                .map(|m| m.to_vector(pose))
+                .map(Point::from_vector)
+                .collect(),
+        )
     }
 }

@@ -1,7 +1,7 @@
 mod game;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston_window::{PistonWindow, WindowSettings, Events, EventSettings, RenderEvent, MouseScrollEvent, UpdateEvent};
-use fastslam::geometry::Point;
+use fastslam::geometry::{Point, Vector};
 use fastslam::render::RenderConfig;
 use crate::game::Game;
 use fastslam::simulator::{Robot, LaserScanner};
@@ -66,8 +66,8 @@ fn main() {
     for polyline in &polylines {
         for pair in polyline.windows(2) {
             game.objects.push(geometry::Line::new(
-                point(-pair[0].y * m_per_px, -pair[0].x * m_per_px),
-                point(-pair[1].y * m_per_px, -pair[1].x * m_per_px)
+                Vector::new(-pair[0].y * m_per_px, -pair[0].x * m_per_px),
+                Vector::new(-pair[1].y * m_per_px, -pair[1].x * m_per_px)
             ))
         }
     }

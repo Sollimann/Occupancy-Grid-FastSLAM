@@ -59,7 +59,7 @@ impl GridMap {
     pub fn update(&mut self, pose: &Pose, scan: &Scan) {
         use self::CellState::*;
         for &m in scan.iter() {
-            let p = m.to_point(pose);
+            let p = m.to_vector(pose);
 
             match self.world_to_map(p) {
                 Some((x,y)) => {
@@ -107,7 +107,7 @@ impl GridMap {
     }
 
     /// convert from continous world coordinates to map coordinates
-    fn world_to_map(&self, point: Point) -> Option<(usize, usize)> {
+    fn world_to_map(&self, point: Vector) -> Option<(usize, usize)> {
         self.index_from_dist(point.x)
             .and_then(|x| self.index_from_dist(point.y).map(|y| (x, y)))
     }
