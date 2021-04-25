@@ -87,7 +87,7 @@ impl Game {
         self.particle_filter.cycle(&self.last_scan, &self.robot.odom.pose);
 
         // Move the robot. TODO: Create a controller
-        self.robot.odom.pose.position.x += 0.003;
-        self.robot.odom.pose.position.y += 0.003;
+        // self.robot.odom.pose.position.x += 0.003;
+        self.robot.odom.pose.position.y -= 0.003;
     }
 }

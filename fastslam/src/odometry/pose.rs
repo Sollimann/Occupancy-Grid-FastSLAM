@@ -9,7 +9,7 @@ pub struct Pose {
 
 impl Default for Pose {
     fn default() -> Pose {
-        Pose::new(Point::new(0.0, 0.0), 0.0)
+        Pose::new(Point::new(1.0, 1.0), 0.2)
     }
 }
 

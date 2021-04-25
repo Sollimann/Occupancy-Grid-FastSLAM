@@ -66,8 +66,8 @@ fn main() {
     for polyline in &polylines {
         for pair in polyline.windows(2) {
             game.objects.push(geometry::Line::new(
-                point(pair[0].x * m_per_px, pair[0].y * m_per_px),
-                point(pair[1].x * m_per_px, pair[1].y * m_per_px)
+                point(-pair[0].y * m_per_px, -pair[0].x * m_per_px),
+                point(-pair[1].y * m_per_px, -pair[1].x * m_per_px)
             ))
         }
     }

@@ -39,8 +39,10 @@ impl Draw for GridMap {
         // draw background
         let rect_bg = graphics::Rectangle::new(graphics::color::hex("333333"));
         let width = cell_size * (size as f64);
+        let gui_x = 0.0;
+        let gui_y = -width;
         rect_bg.draw(
-            [0.0, -width, width, width],
+            [gui_x, gui_y, width, width],
             &DrawState::default(),
             transform,
             gl
@@ -48,13 +50,13 @@ impl Draw for GridMap {
 
         // draw cells
         let mut draw_cell = |rect: Rectangle, r, c| {
-            // let x = (c as f64) * cell_size;
-            // let y = -(r as f64) * cell_size; // this might be wrong sgn
-            let x = -(r as f64) * cell_size;
-            let y = -(c as f64) * cell_size; // this might be wrong sgn
+            // let x = (r as f64) * cell_size;
+            // let y = -(c as f64) * cell_size; // this might be wrong sgn
+            let gui_y = -(r as f64) * cell_size;
+            let gui_x = -(c as f64) * cell_size; // this might be wrong sgn
 
             rect.draw(
-                [x, y, cell_size, cell_size],
+                [gui_x, gui_y, cell_size, cell_size],
                 &DrawState::default(),
                 transform,
                 gl
@@ -63,11 +65,11 @@ impl Draw for GridMap {
 
         let rect_occupied = Rectangle::new(WHITE);
         let rect_freespace = Rectangle::new(graphics::color::hex("525f49"));
-        for x in 0..size {
-            for y in 0..size {
-                match self.cell_state(x,y) {
-                    Some(&Occupied(_)) => draw_cell(rect_occupied, x, y),
-                    Some(&Freespace) => draw_cell(rect_freespace, x, y),
+        for r in 0..size {
+            for c in 0..size {
+                match self.cell_state(r,c) {
+                    Some(&Occupied(_)) => draw_cell(rect_occupied, r, c),
+                    Some(&Freespace) => draw_cell(rect_freespace, c, c),
                     _ => {}
                 }
             }
