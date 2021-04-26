@@ -99,7 +99,7 @@ impl GridMap {
         let c = (dist / self.cell_size + map_offset) as i32;
 
         // if cell is outside grid, return None
-        if c < 0 || c > self.map_size as i32 {
+        if c < 0 || c >= self.map_size as i32 {
             None
         } else {
             Some(c as usize)

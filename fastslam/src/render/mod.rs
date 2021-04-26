@@ -37,10 +37,10 @@ impl Draw for GridMap {
         let cell_size = 0.1 * config.scale;
 
         // draw background
-        let rect_bg = graphics::Rectangle::new(graphics::color::hex("333333"));
+        let rect_bg = graphics::Rectangle::new(graphics::color::hex("dddddd"));
         let width = cell_size * (size as f64);
-        let gui_x = 0.0;
         let gui_y = -width;
+        let gui_x = -width;
         rect_bg.draw(
             [gui_x, gui_y, width, width],
             &DrawState::default(),
@@ -63,13 +63,13 @@ impl Draw for GridMap {
             );
         };
 
-        let rect_occupied = Rectangle::new(WHITE);
-        let rect_freespace = Rectangle::new(graphics::color::hex("525f49"));
+        let rect_occupied = Rectangle::new(graphics::color::hex("acacac"));
+        let rect_freespace = Rectangle::new(graphics::color::hex("b3e5fc"));
         for r in 0..size {
             for c in 0..size {
                 match self.cell_state(r,c) {
                     Some(&Occupied(_)) => draw_cell(rect_occupied, r, c),
-                    Some(&Freespace) => draw_cell(rect_freespace, c, c),
+                    Some(&Freespace) => draw_cell(rect_freespace, r, c),
                     _ => {}
                 }
             }
@@ -89,7 +89,7 @@ impl Draw for ParticleFilter {
 // for simulator
 impl Draw for geometry::Line {
     fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
-        let line = graphics::Line::new(WHITE, 1.0);
+        let line = graphics::Line::new(graphics::color::hex("000000"), 1.0);
 
         let (x1, y1) = config.pixel_coords(self.start);
         let (x2, y2) = config.pixel_coords(self.end);
@@ -101,9 +101,11 @@ impl Draw for geometry::Line {
 
 impl Draw for simulator::Robot {
     fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
-        let robot_color = graphics::color::hex("ffd42a");
-        let robot_circ = graphics::ellipse::Ellipse {
-            color: robot_color,
+        let green = graphics::color::hex("008000");
+        let black = graphics::color::hex("000000");
+
+        let robot_green = graphics::ellipse::Ellipse {
+            color: green,
             border: None,
             resolution: 64
         };
@@ -113,7 +115,7 @@ impl Draw for simulator::Robot {
         let (px, py) = config.pixel_coords(pos);
 
         // draw robot body in position
-        robot_circ.draw(
+        robot_green.draw(
             [0.0, 0.0, robot_radius, robot_radius],
             &Default::default(),
             transform.trans(px - robot_radius / 2.0, py - robot_radius / 2.0),
@@ -121,9 +123,9 @@ impl Draw for simulator::Robot {
         );
 
         // draw robot heading angle
-        let line = graphics::Line::new(robot_color, 1.0);
+        let line = graphics::Line::new(black, 1.0);
         let (hx ,hy) = config.pixel_coords(
-            pos + geometry::Vector::from_angle(self.odom.pose.heading) * config.scale * 0.05
+            pos + geometry::Vector::from_angle(self.odom.pose.heading) * config.scale * 0.03
         );
         line.draw([px, py, hx, hy], &DrawState::default(), transform, gl);
     }
@@ -132,11 +134,11 @@ impl Draw for simulator::Robot {
 impl Draw for PointCloud {
     fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let point = graphics::ellipse::Ellipse {
-            color: graphics::color::hex("1a1a1a"),
+            color: graphics::color::hex("FF0000"),
             border: None,
             resolution: 32
         };
-        let point_radius = 0.25 * config.scale;
+        let point_radius = 0.15 * config.scale;
         for &p in self.iter() {
             let (px, py) = config.pixel_coords(p.to_vector());
 

@@ -20,8 +20,6 @@ pub struct Game {
     pub objects: Vec<geometry::Line>
 }
 
-const COLOR_BG: [f32; 4] = [0.17, 0.35, 0.62, 1.0];
-
 impl Game {
     pub fn new(
         gl: GlGraphics,
@@ -47,7 +45,7 @@ impl Game {
         let(x, y) = (f64::from(width / 2.0), f64::from(height / 2.0));
 
         // clear screen
-        graphics::clear(COLOR_BG, &mut self.gl);
+        graphics::clear(graphics::color::hex("f5f5f5"), &mut self.gl);
 
         let render_config = &self.render_config;
 
@@ -87,7 +85,8 @@ impl Game {
         self.particle_filter.cycle(&self.last_scan, &self.robot.odom.pose);
 
         // Move the robot. TODO: Create a controller
-        // self.robot.odom.pose.position.x += 0.003;
-        self.robot.odom.pose.position.y -= 0.003;
+        self.robot.odom.pose.position.x -= 0.003;
+        self.robot.odom.pose.position.y += 0.003;
+        // self.robot.odom.pose.heading += 0.003;
     }
 }
