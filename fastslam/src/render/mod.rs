@@ -37,7 +37,7 @@ impl Draw for GridMap {
         let cell_size = 0.1 * config.scale;
 
         // draw background
-        let rect_bg = graphics::Rectangle::new(graphics::color::hex("dddddd"));
+        let rect_bg = graphics::Rectangle::new(graphics::color::hex("D3D3D3"));
         let width = cell_size * (size as f64);
         let gui_y = -width;
         let gui_x = -width;
@@ -63,8 +63,8 @@ impl Draw for GridMap {
             );
         };
 
-        let rect_occupied = Rectangle::new(graphics::color::hex("acacac"));
-        let rect_freespace = Rectangle::new(graphics::color::hex("b3e5fc"));
+        let rect_occupied = Rectangle::new(graphics::color::hex("A9A9A9"));
+        let rect_freespace = Rectangle::new(graphics::color::hex("FFFFFF"));
         for r in 0..size {
             for c in 0..size {
                 match self.cell_state(r,c) {
