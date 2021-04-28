@@ -1,15 +1,13 @@
-use std::env;
-use std::fs;
-use std::io::Read;
 use opengl_graphics::GlGraphics;
 use fastslam::render::{RenderConfig, Draw};
 use fastslam::simulator::Robot;
 use fastslam::sensor::laserscanner::Scan;
 use fastslam::particlefilter::ParticleFilter;
 use fastslam::geometry;
-use piston_window::RenderArgs;
+use piston_window::{RenderArgs, Key};
 use graphics::{Transformed};
 use piston::UpdateArgs;
+use fastslam::simulator::Direction;
 
 pub struct Game {
     gl: GlGraphics,
@@ -39,6 +37,19 @@ impl Game {
             particle_filter,
             objects
         }
+    }
+
+    pub fn key_pressed(&mut self, key: Key) {
+
+        let dir = match key {
+            Key::Up => Some(Direction::Forward),
+            Key::Down => Some(Direction::Backward),
+            Key::Left => Some(Direction::Left),
+            Key::Right => Some(Direction::Right),
+            _ => None,
+        };
+
+        self.robot.move_forward(dir);
     }
 
     pub fn render(&mut self, args: &RenderArgs) {
@@ -88,6 +99,6 @@ impl Game {
 
         // Move the robot. TODO: Create a controller
         // self.robot.odom.pose.position.x += 0.003;
-        self.robot.odom.pose.position.y -= 0.003;
+        // self.robot.odom.pose.position.y -= 0.003;
     }
 }

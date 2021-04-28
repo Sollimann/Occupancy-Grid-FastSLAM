@@ -1,6 +1,6 @@
 mod game;
 use opengl_graphics::{GlGraphics, OpenGL};
-use piston_window::{PistonWindow, WindowSettings, Events, EventSettings, RenderEvent, MouseScrollEvent, UpdateEvent};
+use piston_window::{PistonWindow, WindowSettings, Events, EventSettings, RenderEvent, MouseScrollEvent, UpdateEvent, Button, PressEvent};
 use fastslam::geometry::Point;
 use fastslam::render::RenderConfig;
 use crate::game::Game;
@@ -33,10 +33,7 @@ fn main() {
     let mut game = Game::new(
         GlGraphics::new(opengl),
         RenderConfig { scale: 20.0 },
-        Robot {
-            odom: Odometry::default(),
-            laser_scanner: LaserScanner { num_columns: 100}
-        },
+        Robot::default(),
         Scan::empty(),
         ParticleFilter::default(),
         vec![]
@@ -74,6 +71,11 @@ fn main() {
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
+
+        if let Some(Button::Keyboard(key)) = e.press_args() {
+            game.key_pressed(key);
+        }
+
         if let Some(a) = e.render_args() {
             game.render(&a);
         }
