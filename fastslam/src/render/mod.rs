@@ -39,7 +39,7 @@ impl Draw for GridMap {
         // draw background
         let rect_bg = graphics::Rectangle::new(graphics::color::hex("333333"));
         let width = cell_size * (size as f64);
-        let gui_x = 0.0;
+        let gui_x = -width;
         let gui_y = -width;
         rect_bg.draw(
             [gui_x, gui_y, width, width],
@@ -69,7 +69,7 @@ impl Draw for GridMap {
             for c in 0..size {
                 match self.cell_state(r,c) {
                     Some(&Occupied(_)) => draw_cell(rect_occupied, r, c),
-                    Some(&Freespace) => draw_cell(rect_freespace, c, c),
+                    Some(&Freespace) => draw_cell(rect_freespace, r, c),
                     _ => {}
                 }
             }
@@ -132,11 +132,11 @@ impl Draw for simulator::Robot {
 impl Draw for PointCloud {
     fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
         let point = graphics::ellipse::Ellipse {
-            color: graphics::color::hex("1a1a1a"),
+            color: graphics::color::hex("FF0000"),
             border: None,
             resolution: 32
         };
-        let point_radius = 0.25 * config.scale;
+        let point_radius = 0.15 * config.scale;
         for &p in self.iter() {
             let (px, py) = config.pixel_coords(p);
 

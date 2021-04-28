@@ -45,7 +45,7 @@ impl Target for Line {
 
             let t = (q_minus_p).cross(q_to_s) / det;
 
-            if t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0 {
+            if t >= 0.0 && u >= 0.0 && u <= 1.0 {
                 vec![point_of_intersect]
             } else {
                 Vec::new()
