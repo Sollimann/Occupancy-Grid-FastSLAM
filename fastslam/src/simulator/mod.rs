@@ -1,6 +1,6 @@
-pub mod controller;
 pub mod robot;
 pub mod laserscanner;
+pub mod noise;
 
 // Re-export all base-types.
 pub use self::robot::Robot;

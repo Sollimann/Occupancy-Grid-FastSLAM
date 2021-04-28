@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 use crate::odometry::Odometry;
 use crate::simulator::laserscanner::LaserScanner;
+use crate::simulator::noise::gaussian;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Direction {
@@ -56,6 +57,15 @@ impl Robot {
                     Direction::Left => dyaw += self.w,
                     Direction::Right => dyaw -= self.w
                 }
+
+                if ds != 0.0 {
+                    ds = gaussian(ds, 0.001);
+                }
+
+                if dyaw != 0.0 {
+                    dyaw = gaussian(dyaw, 0.001);
+                }
+
                 self.odom.pose.heading = Robot::wrap_heading(self.odom.pose.heading + dyaw);
 
                 let c_yaw = (self.odom.pose.heading).cos();

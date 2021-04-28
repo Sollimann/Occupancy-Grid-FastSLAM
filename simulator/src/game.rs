@@ -8,8 +8,12 @@ use piston_window::{RenderArgs, Key};
 use graphics::{Transformed};
 use piston::UpdateArgs;
 use fastslam::simulator::Direction;
+use std::borrow::BorrowMut;
+use fastslam::odometry::Pose;
+use fastslam::simulator::noise::gaussian;
 
 pub struct Game {
+    key_pressed: bool,
     gl: GlGraphics,
     pub render_config: RenderConfig,
     robot: Robot,
@@ -30,6 +34,7 @@ impl Game {
         objects: Vec<geometry::Line>
     ) -> Game {
         Game {
+            key_pressed: false,
             gl,
             render_config,
             robot,
@@ -50,6 +55,12 @@ impl Game {
         };
 
         self.robot.move_forward(dir);
+
+        if dir == None {
+            self.key_pressed = false
+        } else {
+            self.key_pressed = true
+        }
     }
 
     pub fn render(&mut self, args: &RenderArgs) {
@@ -88,17 +99,35 @@ impl Game {
 
     pub fn update(&mut self, _: &UpdateArgs) {
 
+        let apply_pose_noise = |p: &mut Pose, sig: f64| {
+            p.position.x = gaussian(p.position.x, sig);
+            p.position.y = gaussian(p.position.y, sig);
+            p.heading = gaussian(p.heading, sig);
+        };
+
+        let apply_scan_noise = |scan: &mut Scan, sig: f64| {
+            for &mut mut m in scan.measurements.iter_mut() {
+                m.distance = gaussian(m.distance, sig);
+                m.angle = gaussian(m.angle, sig);
+            }
+        };
+
         // perform a laser scan
         self.last_scan = self
             .robot
             .laser_scanner
             .scan(&self.robot.odom.pose, &self.objects);
 
-        // run perception algorithm / particle filter
-        self.particle_filter.cycle(&self.last_scan, &self.robot.odom.pose);
+        let mut sampled_pose = self.robot.odom.pose.clone();
+        let mut sampled_scan = self.last_scan.clone();
 
-        // Move the robot. TODO: Create a controller
-        // self.robot.odom.pose.position.x += 0.003;
-        // self.robot.odom.pose.position.y -= 0.003;
+        // apply noise
+        if self.key_pressed {
+            apply_scan_noise(&mut sampled_scan, 0.01);
+            apply_pose_noise(&mut sampled_pose, 0.07);
+        }
+
+        // run perception algorithm / particle filter
+        self.particle_filter.cycle(&sampled_scan, &sampled_pose);
     }
 }
