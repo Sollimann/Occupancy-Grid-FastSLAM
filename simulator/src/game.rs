@@ -118,10 +118,9 @@ impl Game {
 
         // apply noise
         if self.key_pressed {
-            let (sampled_pose, sampled_scan) = self.apply_noise(
-                self.robot.odom.pose.clone(),
-                self.last_scan.clone()
-            );
+            let (sampled_pose, sampled_scan) =
+                (self.robot.odom.pose.clone(),
+                self.last_scan.clone());
 
             // run perception algorithm / particle filter
             self.particle_filter.cycle(&sampled_scan, &sampled_pose);

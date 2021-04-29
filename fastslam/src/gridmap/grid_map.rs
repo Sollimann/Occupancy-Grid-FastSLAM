@@ -4,6 +4,7 @@ use crate::math::scalar::Scalar;
 use crate::odometry::pose::Pose;
 use crate::sensor::laserscanner::Scan;
 use crate::geometry::vector::Vector;
+use line_drawing::Bresenham;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CellState {
@@ -61,6 +62,7 @@ impl GridMap {
         for &m in scan.iter() {
             let p = m.to_point(pose);
 
+            // register occupied space
             match self.world_to_map(p) {
                 Some((x,y)) => {
                     let cell: &mut CellState = &mut self.cells[x][y];
@@ -73,22 +75,28 @@ impl GridMap {
                 _ => {}
             }
 
-            // Find free space
-            // TODO: replace by Bresenham line drawing alg
-            let num = 100;
-            for i in 0..num {
-                let alpha = Scalar::from(i) / Scalar::from(num);
-                let p = pose.position + Vector::from_angle(pose.heading + m.angle) * alpha * m.distance;
+            // register freespace
+            match self.world_to_map(pose.position) {
+                None => panic!("could not convert point!"),
+                Some(start) => {
+                    match self.world_to_map(pose.position + Vector::from_angle(pose.heading + m.angle) * m.distance) {
+                        None => panic!("could not convert point!"),
+                        Some(end) => {
+                            let freespace = Bresenham::new(
+                                (start.0 as i64, start.1 as i64),
+                                (end.0 as i64, end.1 as i64))
+                                .map(|(x, y)| (x as usize, y as usize))
+                                .collect::<Vec<_>>();
 
-                match self.world_to_map(p) {
-                    Some((x, y)) => {
-                        let cell: &mut CellState = &mut self.cells[x][y];
-                        *cell = match *cell {
-                            Void => Freespace,
-                            o => o,
-                        };
+                            for (x,y) in freespace {
+                                let cell: &mut CellState = &mut self.cells[x][y];
+                                *cell = match *cell {
+                                    Void => Freespace,
+                                    o => o,
+                                };
+                            }
+                        }
                     }
-                    _ => {}
                 }
             }
         }
