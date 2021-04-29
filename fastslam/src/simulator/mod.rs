@@ -6,3 +6,4 @@ pub mod noise;
 pub use self::robot::Robot;
 pub use self::robot::Direction;
 pub use self::laserscanner::LaserScanner;
+pub use self::noise::Noise;

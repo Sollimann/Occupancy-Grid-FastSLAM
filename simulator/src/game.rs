@@ -9,14 +9,17 @@ use graphics::{Transformed};
 use piston::UpdateArgs;
 use fastslam::simulator::Direction;
 use fastslam::odometry::Pose;
-use fastslam::simulator::noise::gaussian;
+use fastslam::simulator::noise::{Noise, gaussian};
+use fastslam::geometry::Point;
 
 pub struct Game {
     key_pressed: bool,
+    count: u32,
     sim_gl: GlGraphics,
     robot: Robot,
     last_scan: Scan,
     particle_filter: ParticleFilter,
+    noise: Noise,
     pub render_config: RenderConfig,
     pub objects: Vec<geometry::Line>
 }
@@ -32,13 +35,22 @@ impl Game {
         particle_filter: ParticleFilter,
         objects: Vec<geometry::Line>
     ) -> Game {
+
+        let noise = Noise {
+            pose_drift: 0.0005,
+            std_dev_pose: 0.05,
+            std_dev_laser: 0.01
+        };
+
         Game {
             key_pressed: false,
+            count: 0,
             sim_gl,
             render_config,
             robot,
             last_scan,
             particle_filter,
+            noise,
             objects
         }
     }
@@ -98,35 +110,51 @@ impl Game {
 
     pub fn update(&mut self, _: &UpdateArgs) {
 
-        let apply_pose_noise = |p: &mut Pose, sig: f64| {
-            p.position.x = gaussian(p.position.x, sig);
-            p.position.y = gaussian(p.position.y, sig);
-            p.heading = gaussian(p.heading, sig);
-        };
-
-        let apply_scan_noise = |scan: &mut Scan, sig: f64| {
-            for &mut mut m in scan.measurements.iter_mut() {
-                m.distance = gaussian(m.distance, sig);
-                m.angle = gaussian(m.angle, sig);
-            }
-        };
-
         // perform a laser scan
         self.last_scan = self
             .robot
             .laser_scanner
             .scan(&self.robot.odom.pose, &self.objects);
 
-        let mut sampled_pose = self.robot.odom.pose.clone();
-        let mut sampled_scan = self.last_scan.clone();
-
         // apply noise
         if self.key_pressed {
-            apply_scan_noise(&mut sampled_scan, 0.01);
-            apply_pose_noise(&mut sampled_pose, 0.07);
-        }
+            let (sampled_pose, sampled_scan) = self.apply_noise(
+                self.robot.odom.pose.clone(),
+                self.last_scan.clone()
+            );
 
-        // run perception algorithm / particle filter
-        self.particle_filter.cycle(&sampled_scan, &sampled_pose);
+            // run perception algorithm / particle filter
+            self.particle_filter.cycle(&sampled_scan, &sampled_pose);
+        }
+        self.key_pressed = false;
+    }
+
+    fn apply_noise(&mut self, pose: Pose, scan: Scan) -> (Pose, Scan) {
+        self.count += 1;
+
+        let pose_drift = (self.count as f64) * self.noise.pose_drift;
+
+        let apply_pose_noise = |p: Pose, sig: f64| {
+            Pose {
+                position: Point {
+                    x: gaussian(p.position.x + pose_drift, sig),
+                    y: gaussian(p.position.y + pose_drift, sig)
+                },
+                heading: gaussian(p.heading + pose_drift, sig)
+            }
+        };
+
+        let apply_scan_noise = |scan: Scan, sig: f64| {
+            for &mut mut m in scan.measurements.clone().iter_mut() {
+                m.distance = gaussian(m.distance, sig);
+                m.angle = gaussian(m.angle, sig);
+            }
+            scan
+        };
+
+        let scan = apply_scan_noise(scan, self.noise.std_dev_laser);
+        let pose  = apply_pose_noise(pose, self.noise.std_dev_pose);
+
+        (pose, scan)
     }
 }
