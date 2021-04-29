@@ -3,16 +3,10 @@ A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle
 
 # Consume
 
-#### Requirements
+#### To run simulator + FastSLAM
 
 ```bash
-$ sudo apt-get install libsdl2-dev
-```
-
-#### Run (to run gt map)
-
-```bash
-$ cargo run --bin display_image
+$ cargo run --bin vacuum-robot-simulator -- simulator/worlds/house.svg
 ```
 
 # Datasets
