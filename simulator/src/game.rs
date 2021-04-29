@@ -8,17 +8,16 @@ use piston_window::{RenderArgs, Key};
 use graphics::{Transformed};
 use piston::UpdateArgs;
 use fastslam::simulator::Direction;
-use std::borrow::BorrowMut;
 use fastslam::odometry::Pose;
 use fastslam::simulator::noise::gaussian;
 
 pub struct Game {
     key_pressed: bool,
-    gl: GlGraphics,
-    pub render_config: RenderConfig,
+    sim_gl: GlGraphics,
     robot: Robot,
     last_scan: Scan,
     particle_filter: ParticleFilter,
+    pub render_config: RenderConfig,
     pub objects: Vec<geometry::Line>
 }
 
@@ -26,7 +25,7 @@ const COLOR_BG: [f32; 4] = [0.17, 0.35, 0.62, 1.0];
 
 impl Game {
     pub fn new(
-        gl: GlGraphics,
+        sim_gl: GlGraphics,
         render_config: RenderConfig,
         robot: Robot,
         last_scan: Scan,
@@ -35,7 +34,7 @@ impl Game {
     ) -> Game {
         Game {
             key_pressed: false,
-            gl,
+            sim_gl,
             render_config,
             robot,
             last_scan,
@@ -69,7 +68,7 @@ impl Game {
         let(x, y) = (f64::from(width / 2.0), f64::from(height / 2.0));
 
         // clear screen
-        graphics::clear(COLOR_BG, &mut self.gl);
+        graphics::clear(COLOR_BG, &mut self.sim_gl);
 
         let render_config = &self.render_config;
 
@@ -78,7 +77,7 @@ impl Game {
         let pointcloud = &self.last_scan.to_pointcloud(&robot.odom.pose);
         let particle_filter = &self.particle_filter;
 
-        self.gl.draw(args.viewport(), |c, gl| {
+        self.sim_gl.draw(args.viewport(), |c, gl| {
             let transform = c.transform.trans(x,y);
 
             // draw all static objects

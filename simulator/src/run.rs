@@ -4,11 +4,10 @@ use piston_window::{PistonWindow, WindowSettings, Events, EventSettings, RenderE
 use fastslam::geometry::Point;
 use fastslam::render::RenderConfig;
 use crate::game::Game;
-use fastslam::simulator::{Robot, LaserScanner};
-use fastslam::odometry::Odometry;
+use fastslam::simulator::{Robot};
 use fastslam::sensor::laserscanner::Scan;
 use fastslam::particlefilter::ParticleFilter;
-use std::{env, fs};
+use std::{env, fs, thread};
 use std::io::Read;
 use svg2polylines::Polyline;
 use fastslam::geometry;
@@ -22,6 +21,8 @@ fn main() {
         .exit_on_esc(true)
         .build()
         .unwrap();
+
+
 
     // TODO: Try setting the fps
     // window.set_up(60)
@@ -89,5 +90,17 @@ fn main() {
             game.render_config.scale = f64::max(1.0, game.render_config.scale);
         }
     }
+
+
+    let mapgl = OpenGL::V4_5;
+
+    thread::spawn(move || {
+        let mut map_window: PistonWindow = WindowSettings::new("Particle Filter Map", [400, 200])
+            .graphics_api(mapgl)
+            .fullscreen(false)
+            .exit_on_esc(true)
+            .build()
+            .unwrap();
+    });
 
 }
