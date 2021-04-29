@@ -26,6 +26,7 @@ impl Measurement {
 }
 
 /// A full 360° scan from a laser scanner.
+#[derive(Debug, Clone)]
 pub struct Scan {
     pub measurements: Vec<Measurement>,
 }
