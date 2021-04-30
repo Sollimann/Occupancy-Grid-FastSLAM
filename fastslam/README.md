@@ -1,11 +1,3 @@
-
-## The SLAM Problem
-
-<img src="http://aslanfmh65.com/wp-content/uploads/2019/07/Screen-Shot-2019-07-10-at-10.19.49-AM.jpg" alt="drawing" style=" width: 300px:" />
-
-From a probabilistic perspective, there are two main forms of the SLAM problem, which are both of equal practical importance.
-One is known as the *online SLAM Problem* and the *full SLAM Problem*
-
 #### Online SLAM Problem
 
 The online SLAM problem involves estimating the posterior over the momentary pose along with the map
@@ -53,43 +45,6 @@ The use of particle filters creates the unusual situation that FastSLAM solves b
 path renders the landmark/map estimates conditionally independent. However, because particle filters estimate one pose
 at-a-time, FastSLAM is indeed an online algorithm. Hence it also solves the online SLAM problem. 
 
-## FastSLAM Occupancy Grid Pseudo Code
-
-```python
-// args:
-// X_{t-1} : 
-def fn(X_{t-1}: Set[Pose], u_t: (u, w), z_t: List[int]):
-    X_t = {} // empty set
-    
-    // loop through all particles
-    for k = 1 to M:
-    
-        // given the current pose of the k-th particle
-        // 
-        x_t = sample_motion_model_velocity(u_t, x_{t-1})
-
-        // compute the likelihood of the measurement z_t given the pose x_t represented by the k-th particle and given
-        // the map m_{t-1} computed based on previous measurement and the trajectory represented by this particle
-        w_t = beam_range_finder_model(z_t, x_t, m_{t-1})
-        
-        // compute a new occupancy grid map, given the current pose x_t of the k-th particle, the map m_{t-1} associated to it
-        // and the measurement z_t
-        m_t = updated_occupancy_grid(z_t, x_t, m_{t-1})
-
-        
-```
-
-
-### Motion Model Algorithm
-
-##### Exact Model
-
-<img src="https://latex.codecogs.com/gif.latex?\left(\begin{array}{l}&space;x'&space;\\&space;y'&space;\\&space;\theta'&space;\end{array}\right)&space;=\left(\begin{array}{l}&space;x&space;\\&space;y&space;\\&space;\theta&space;\end{array}\right)&plus;\left(\begin{array}{c}&space;-\frac{v}{\omega}&space;\sin&space;\theta&plus;\frac{v}{\omega}&space;\sin&space;(\theta&plus;\omega&space;\Delta&space;t)&space;\\&space;\frac{v}{\omega}&space;\cos&space;\theta-\frac{v}{\omega}&space;\cos&space;(\theta&plus;\omega&space;\Delta&space;t)&space;\\&space;\omega&space;\Delta&space;t&space;\end{array}\right)" />
-
-##### Real Model
-
-### Beam Range Finder Model Algorithm
-
 ## The Occupancy Grid Mapping Algorithm
 
 **Occupancy grid mapping** addresses the problem of generating consistent maps from noisy and uncertain measurement data,
@@ -117,7 +72,31 @@ grid map partitions the space into finitely many grid cells:
 Each <img src="https://latex.codecogs.com/gif.latex?\inline&space;\boldsymbol{m}_i" /> has attached to it a binary
 occupancy value, which specifies whether a cell is occupied or free. We will write "1" for occupied and "0" for free.
 The notation <img src="https://latex.codecogs.com/gif.latex?\inline&space;p&space;(\boldsymbol{m}_i&space;=&space;1)" />
-or <img src="https://latex.codecogs.com/gif.latex?\inline&space;p&space;(\boldsymbol{m}_i)" /> refers to the probability
+or <img src="https://latex.codecogs.## FastSLAM algorithm for Occupancy Grid Maps
+
+The FastSLAM algorithm uses particle filters (*Rao-Blackwellized particle filters*) for estimating the robot path. This means
+that for each of these particles (believes) the individual map errors are *conditionally independent*. Hence the mapping problem
+can be factored into many separate problems, one for each feature in the map. FastSLAM estimates these map feature locations by EKFs
+, but using a separate low-dimensional EKF for each individual feature. This is fundamentally different from most SLAM
+algorithms which tend to all use a single Gaussian distribution to estimate the location of all features jointly.
+
+#### Advantages of FastSLAM
+
+The key advantage of FastSLAM, however, stems from the fact that data association (determining the correct mapping
+of observations to landmark/particle) decisions can be made on a per-particle basis.
+As a result, the filter maintains posteriors over multiple data associations, not just the most likely one. This is in stark
+contrast to most SLAM algorithms, which track only a single data association at any point in time. In fact, by sampling over
+data associations, FastSLAM approcimates the full posterior, not just hte maximum likelihood data association. The ability
+to pursue multiple data associations simultanesouly makes FastSLAM significantly more robust to data assosciation problems
+than algorithms based on incremental maximum likelihood data association. Another advantage of FastSLAM over other SLAM
+algorithms arises from the fact that particle filters can cope with non-linear robot motion models, whereas previous
+techniques approximate such models via linear functions. This is important when the kinematics are highly non-linear, or when
+the pose uncertainty is relatively high.
+
+The use of particle filters creates the unusual situation that FastSLAM solves both the *full SLAM problem* and the 
+*online SLAM problem*. As we shall see, FastSLAM is formulated to calculate the full path posterior - only the full
+path renders the landmark/map estimates conditionally independent. However, because particle filters estimate one pose
+at-a-time, FastSLAM is indeed an online algorithm. Hence it also solves the online SLAM problem. com/gif.latex?\inline&space;p&space;(\boldsymbol{m}_i)" /> refers to the probability
 that a grid cell is occupied.
 
 The standard occupancy grid approach breaks down the problem of estimating the map into a collection of separate problems,
