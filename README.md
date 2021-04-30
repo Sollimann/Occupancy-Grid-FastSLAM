@@ -9,9 +9,6 @@ A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle
 $ cargo run --bin vacuum-robot-simulator -- simulator/worlds/house.svg
 ```
 
-# Datasets
-[1] Dataset: MIT CSAIL Building. https://lucacarlone.mit.edu/datasets/
-
 # References
 [1] Thrun et.al., Probabilistic Robotics. See resources folder.
 
