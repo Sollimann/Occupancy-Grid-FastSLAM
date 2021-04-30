@@ -118,9 +118,10 @@ impl Game {
 
         // apply noise
         if self.key_pressed {
-            let (sampled_pose, sampled_scan) =
-                (self.robot.odom.pose.clone(),
-                self.last_scan.clone());
+            let (sampled_pose, sampled_scan) = self.apply_noise_and_drift(
+                self.robot.odom.pose.clone(),
+                self.last_scan.clone()
+            );
 
             // run perception algorithm / particle filter
             self.particle_filter.cycle(&sampled_scan, &sampled_pose);
@@ -128,7 +129,7 @@ impl Game {
         self.key_pressed = false;
     }
 
-    fn apply_noise(&mut self, pose: Pose, scan: Scan) -> (Pose, Scan) {
+    fn apply_noise_and_drift(&mut self, pose: Pose, scan: Scan) -> (Pose, Scan) {
         self.count += 1;
 
         let pose_drift = (self.count as f64) * self.noise.pose_drift;
