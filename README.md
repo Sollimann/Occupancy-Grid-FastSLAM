@@ -1,17 +1,17 @@
 # Occupancy Grid FastSLAM
 A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle Filters
 
-0. [Consume](#consume)
-1. [Introduction](#introduction)
-2. [Implementation Details](#implementation-details)
+1. [Consume](#consume)
+2. [Introduction](#introduction)
+3. [Implementation Details](#implementation-details)
    1. [Robot](#robot)
    2. [Rao-Blackwellized Particle Filter](#rao-blackwellized-particle-filter)
        1. [Particles](#particles)
        2. [Scan Matcher](#scan-matcher)
    3. [Sensor](#sensor)
    4. [Wheel Encoder](#wheel-encoder)
-3. [How-To](#how-to)
-4. [Limitations and Outlook](#limitations-and-outlook)
+4. [How-To](#how-to)
+5. [Limitations and Outlook](#limitations-and-outlook)
 
 ## Consume
 
