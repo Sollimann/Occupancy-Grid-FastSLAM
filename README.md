@@ -10,8 +10,7 @@ A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle
        2. [Scan Matcher](#scan-matcher)
    3. [Sensor](#sensor)
    4. [Wheel Encoder](#wheel-encoder)
-4. [How-To](#how-to)
-5. [Limitations and Outlook](#limitations-and-outlook)
+4. [References](#references)
 
 ## Consume
 
@@ -32,7 +31,7 @@ The simulator can be used in three different modes:
 
 In Localization mode, a ground truth map of the area is provided and the robot is tasked with localizing itself relative to this map. Mapping is performed given ground truth information about the pose of the robot and a map is constructed from the robot's sensor readings. In SLAM mode, no ground truth information is used at all and the robot has to solve the problem of simulatenously localizing itself while constructing a map of its surroundings.
 
-The rest of this readme is structured as follows. In [Section 2](#implementation-details) we will present an overview of the project architecture and discuss all fundamental components of the implementation in detail. In [Section 3](#how-to) we will provide guidelines for using the simulator for SLAM as well as other robotics applications. [Section 4](#limitations-and-outlook) will be dedicated to analyzing limitations of the current version of the simulation environment and outline potential extensions of the implementation.
+The rest of this readme is structured as follows. In [Section 3](#implementation-details) we will present an overview of the project architecture and discuss all fundamental components of the implementation in detail. In [Section 4](#how-to) we will provide guidelines for using the simulator for SLAM as well as other robotics applications. [Section 4](#limitations-and-outlook) will be dedicated to analyzing limitations of the current version of the simulation environment and outline potential extensions of the implementation.
 
 ## Implementation Details
 
@@ -67,7 +66,7 @@ The robot is equipped with a 2D laser range finder. The simulation parameters al
 Wheel encoders are a popular sensor modality to obtain odometry information for autonomous mobile robots. Each accumulating the encoder ticks, the number of wheel revolutions can be estimated and transformed into estimates of translational and angular velocity. This information, combined with the motion model of the robot, is then used in the prediciton step of the particle filter. However, due to unmodeled effects such as wheel slip, encoder-based odometry information is prone to inaccuracies.
 
 
-# References
+## References
 [1] Thrun et.al., Probabilistic Robotics. See resources folder.
 
 [2] Dr.Cyrill Stachniss, Robot Mapping course, University of Freiburg. https://www.youtube.com/watch?v=3Yl2aq28LFQ&index=15&list=PLgnQpQtFTOGQrZ4O5QzbIHgl3b1JHimN_
