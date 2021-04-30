@@ -31,11 +31,10 @@ The simulator can be used in three different modes:
 
 In Localization mode, a ground truth map of the area is provided and the robot is tasked with localizing itself relative to this map. Mapping is performed given ground truth information about the pose of the robot and a map is constructed from the robot's sensor readings. In SLAM mode, no ground truth information is used at all and the robot has to solve the problem of simulatenously localizing itself while constructing a map of its surroundings.
 
-The rest of this readme is structured as follows. In [Section 3](#implementation-details) we will present an overview of the project architecture and discuss all fundamental components of the implementation in detail. In [Section 4](#how-to) we will provide guidelines for using the simulator for SLAM as well as other robotics applications. [Section 4](#limitations-and-outlook) will be dedicated to analyzing limitations of the current version of the simulation environment and outline potential extensions of the implementation.
 
 ## Implementation Details
 
-The project is based on object-oriented design principles and aims to provide and relate class implementations according to the functionality of the corresponding physical components. An illustration of the main components is displayed below.
+An illustration of the main components is displayed below.
 
 <p align="center">
   <img src="resources/figures/architecture.svg" width="100%">
