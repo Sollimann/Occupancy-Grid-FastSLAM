@@ -6,11 +6,11 @@ use fastslam::render::RenderConfig;
 use crate::game::Game;
 use fastslam::simulator::{Robot};
 use fastslam::sensor::laserscanner::Scan;
-use fastslam::particlefilter::ParticleFilter;
 use std::{env, fs, thread};
 use std::io::Read;
 use svg2polylines::Polyline;
 use fastslam::geometry;
+use fastslam::particlefilter::particle::Particle;
 
 fn main() {
     let opengl = OpenGL::V4_5;
@@ -36,7 +36,7 @@ fn main() {
         RenderConfig { scale: 20.0 },
         Robot::default(),
         Scan::empty(),
-        ParticleFilter::default(),
+        Particle::default(),
         vec![]
     );
 

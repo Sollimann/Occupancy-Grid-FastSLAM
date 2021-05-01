@@ -8,7 +8,8 @@ use graphics::{DrawState, Rectangle, Transformed};
 use crate::gridmap::grid_map::CellState::{Occupied, Freespace};
 use crate::pointcloud::PointCloud;
 use rayon::iter::ParallelIterator;
-use crate::particlefilter::ParticleFilter;
+use crate::particlefilter::particle;
+use crate::particlefilter::particle::Particle;
 
 pub struct RenderConfig {
     pub scale: f64
@@ -77,7 +78,7 @@ impl Draw for GridMap {
     }
 }
 
-impl Draw for ParticleFilter {
+impl Draw for Particle {
     fn draw(&self, config: &RenderConfig, transform: Matrix2d, gl: &mut GlGraphics) {
 
         // move the gridmap view to the top left corner of screen
