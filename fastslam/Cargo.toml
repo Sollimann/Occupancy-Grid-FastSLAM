@@ -16,11 +16,14 @@ piston2d-graphics = "0.40.0"
 image = { version = "0.23.6", default-features = true }
 imageproc = { version = "0.22.0", features = ["display-window"] }
 
-# iterator optimizer
+# data parallelism
 rayon = "1.5.0"
 
 # bresenham
 line_drawing = "0.8.0"
+
+# nearest neighbor search
+acap = "0.2.0"
 
 # noise
 rand = "0.8.3"
