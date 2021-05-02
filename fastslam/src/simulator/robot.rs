@@ -1,7 +1,6 @@
-use std::f64::consts::PI;
-use crate::odometry::Odometry;
+use crate::odometry::{Odometry, Twist, MotionModel};
 use crate::simulator::laserscanner::LaserScanner;
-use crate::simulator::noise::gaussian;
+use crate::geometry::{Vector};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Direction {
@@ -29,22 +28,9 @@ impl Default for Robot {
     }
 }
 
+impl MotionModel for Robot {}
 
 impl Robot {
-
-    fn wrap_heading(yaw: f64) -> f64 {
-        let mut angle = yaw;
-
-        while angle < -PI {
-            angle += 2.0 * PI
-        }
-        while angle > PI {
-            angle -= 2.0 * PI
-        }
-
-        angle
-    }
-
     pub fn move_forward(&mut self, dir: Option<Direction>) {
         match dir {
             Some(d) => {
@@ -58,25 +44,8 @@ impl Robot {
                     Direction::Right => dyaw -= self.w
                 }
 
-                if ds != 0.0 {
-                    ds = gaussian(ds, 0.001);
-                }
-
-                if dyaw != 0.0 {
-                    dyaw = gaussian(dyaw, 0.001);
-                }
-
-                self.odom.pose.heading = Robot::wrap_heading(self.odom.pose.heading + dyaw);
-
-                let c_yaw = (self.odom.pose.heading).cos();
-                let s_yaw = (self.odom.pose.heading).sin();
-
-                let dx = ds * c_yaw;
-                let dy = ds * s_yaw;
-
-                self.odom.pose.position.x += dx;
-                self.odom.pose.position.y += dy;
-
+                let gain = Twist { velocity: Vector { x: ds, y: 0.0 }, angular: dyaw };
+                self.odom.pose = Self::motion_model(self.odom.pose.clone(), gain, 1.0);
             },
             None => (),
         }

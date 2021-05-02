@@ -4,9 +4,12 @@ use crate::sensor::laserscanner::Scan;
 use crate::particlefilter::particle::Particle;
 //use rayon::iter::{IntoParallelRefMutIterator, IntoParallelIterator};
 use rayon::prelude::*;
+use crate::math::timer::Timer;
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
+    simulation: bool,
+    timer: Timer,
     n_particles: usize,
     particles: Vec<Particle>,
     pub gridmap: GridMap,
@@ -28,6 +31,8 @@ impl Default for ParticleFilter {
         assert_eq!(particles.len(), n_particles);
 
         ParticleFilter {
+            simulation: true,
+            timer: Timer::init_time(),
             n_particles,
             particles: vec![],
             gridmap: init_gridmap,
@@ -43,16 +48,24 @@ impl ParticleFilter {
     /// gain: u_t-1 - the most recent gain, applied in the previous step
     pub fn cycle(&mut self, scan: &Scan, gain: &Twist) {
 
+        let dt = if self.simulation {
+            1.0 // 1.0s runs nicely with the simulator
+        } else {
+            self.timer.get_dt()
+        };
+
+
         // This is an iterator-like chain that potentially executes in parallel
         // we iterate over all particles in the filter and do the following
         self.particles
             .par_iter_mut()
             .for_each(|p: &mut Particle| {
-                p.weight = 2.0
+                p.weight = 2.0;
 
 
                 // step 1.)
-                // initial guess of pose x'_ bade on motion model
+                // initial guess of pose x'_ based on motion model
+                let x_initial = Self::predict(p.pose.clone(), gain.clone(), dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -78,5 +91,9 @@ impl ParticleFilter {
             });
 
         println!("particles: {:?} ", self.particles);
+    }
+
+    fn predict(pose: Pose, gain: Twist, dt: f64) -> Pose{
+        unimplemented!("todo")
     }
 }
