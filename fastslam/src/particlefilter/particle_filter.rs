@@ -1,5 +1,5 @@
 use crate::gridmap::grid_map::GridMap;
-use crate::odometry::{Pose, Twist};
+use crate::odometry::{Pose, Twist, MotionModel};
 use crate::sensor::laserscanner::Scan;
 use crate::particlefilter::particle::Particle;
 //use rayon::iter::{IntoParallelRefMutIterator, IntoParallelIterator};
@@ -41,6 +41,8 @@ impl Default for ParticleFilter {
     }
 }
 
+impl MotionModel for ParticleFilter {}
+
 impl ParticleFilter {
 
     /// particles: S_t-1 - the sample set of the previous step
@@ -65,7 +67,7 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let x_initial = Self::predict(p.pose.clone(), gain.clone(), dt);
+                let x_initial = Self::motion_model(p.pose.clone(), gain.clone(), dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -91,9 +93,5 @@ impl ParticleFilter {
             });
 
         println!("particles: {:?} ", self.particles);
-    }
-
-    fn predict(pose: Pose, gain: Twist, dt: f64) -> Pose{
-        unimplemented!("todo")
     }
 }
