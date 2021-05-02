@@ -3,10 +3,11 @@ use crate::gridmap::grid_map::GridMap;
 use crate::math::scalar::Scalar;
 use crate::sensor::laserscanner::Scan;
 
+#[derive(Debug, Clone)]
 pub struct Particle {
-    pub pose: Pose,
-    pub weight: Scalar,
-    pub gridmap: GridMap
+    pub pose: Pose, // particle's pose (x, y, thetha)
+    pub weight: Scalar, // particle's current weight
+    pub gridmap: GridMap // particle's estimated grid map of the environment
 }
 
 // TODO: remove this later
@@ -33,7 +34,6 @@ impl Particle {
 
         // TODO: this is cheating
         self.pose = pose.clone();
-
         self.gridmap.update(&self.pose, scan);
     }
 }
