@@ -2,6 +2,7 @@ use std::fmt;
 use rayon::iter::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use rayon::slice;
 use crate::geometry::point::Point;
+use crate::math::scalar::Scalar;
 
 #[derive(Debug, Clone)]
 pub struct PointCloud {
@@ -34,6 +35,12 @@ impl PointCloud {
 
     pub fn iter(&self) -> std::slice::Iter<Point> {
         self.points.iter()
+    }
+
+    pub fn centroid(&self) -> Point {
+        let x_avg: Scalar = self.iter().map(|p: &Point| p.x).sum::<Scalar>() / self.size() as Scalar;
+        let y_avg: Scalar = self.iter().map(|p: &Point| p.y).sum::<Scalar>() / self.size() as Scalar;
+        Point::new(x_avg, y_avg)
     }
 
     pub fn par_iter(&self) -> rayon::slice::Iter<Point> {

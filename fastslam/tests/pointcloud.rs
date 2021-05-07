@@ -53,3 +53,18 @@ fn test_mutate_pointcloud() {
         .iter()
         .for_each(|p| assert_eq!(*p, p3))
 }
+
+
+#[test]
+fn test_pointcloud_centroid() {
+    let p0 = Point::new(-1.0, -1.0);
+    let p1 = Point::new(-1.0, -1.0);
+    let p2 = Point::new(-1.0, -1.0);
+    let p3 = Point::new(1.0, 1.0);
+    let mut cloud = PointCloud::new(vec![p0, p1, p2, p3]);
+
+    assert_eq!(cloud.size(), 4);
+
+    let centroid = cloud.centroid();
+    assert_eq!(Point::new(-0.5, -0.5), centroid)
+}

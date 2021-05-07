@@ -95,7 +95,11 @@ impl ParticleFilter {
         println!("particles: {:?} ", self.particles);
     }
 
-    fn scan_matching(pose: Pose, scan: Scan) {
+    fn scan_matching(pose: Pose, scan: Scan, particle: Particle) {
+
+        // transform scan in polar coordinates to pointcloud in cartesian coordinates
+        let curr_pointcloud = scan.to_pointcloud(&pose);
+        let prev_pointcloud = particle.get_prev_observation();
 
     }
 }
