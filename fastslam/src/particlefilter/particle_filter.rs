@@ -94,4 +94,8 @@ impl ParticleFilter {
 
         println!("particles: {:?} ", self.particles);
     }
+
+    fn scan_matching(pose: Pose, scan: Scan) {
+
+    }
 }

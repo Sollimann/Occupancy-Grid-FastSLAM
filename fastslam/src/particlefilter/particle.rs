@@ -2,10 +2,13 @@ use crate::odometry::Pose;
 use crate::gridmap::grid_map::GridMap;
 use crate::math::scalar::Scalar;
 use crate::sensor::laserscanner::Scan;
+use crate::pointcloud::PointCloud;
+
 
 #[derive(Debug, Clone)]
 pub struct Particle {
-    pub pose: Pose, // particle's pose (x, y, thetha)
+    prev_state: (Pose, GridMap, PointCloud),
+    pub pose: Pose, // particle's pose (x, y, theta)
     pub weight: Scalar, // particle's current weight
     pub gridmap: GridMap // particle's estimated grid map of the environment
 }
@@ -14,6 +17,7 @@ pub struct Particle {
 impl Default for Particle {
     fn default() -> Self {
         Particle {
+            prev_state: (Pose::default(), GridMap::default(), PointCloud::empty()),
             pose: Pose::default(),
             weight: 1.0,
             gridmap: GridMap::default()
@@ -24,6 +28,7 @@ impl Default for Particle {
 impl Particle {
     pub fn new(pose: Pose, weight: Scalar, gridmap: GridMap) -> Self {
         Particle {
+            prev_state: (pose.clone(), gridmap.clone(), PointCloud::empty()),
             pose,
             weight,
             gridmap
