@@ -12,6 +12,8 @@ pub struct Vector {
     pub y: Scalar,
 }
 
+pub type Mat2 = [[f64; 2]; 2];
+
 /// decide how a Vector should be displayed when formatting and printing
 impl fmt::Display for Vector {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -78,6 +80,12 @@ impl Vector {
     /// calculate dot product between two Vector's
     pub fn dot(&self, q: Vector) -> Scalar {
         self.x * q.x + q.y * self.y
+    }
+
+    /// calculate product of vector and a vector transpose
+    pub fn prod(&self, q: Vector) -> Mat2 {
+        let (tx, ty) = (self.x, self.y);
+        [[tx* q.x, ty * q.y], [ty* q.x, ty * q.y]]
     }
 
     /// calculate cross product of two Vector's. The result is the Resultant

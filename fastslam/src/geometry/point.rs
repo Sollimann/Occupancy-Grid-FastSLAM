@@ -74,6 +74,10 @@ impl Point {
         Vector::new(x, y)
     }
 
+    pub fn to_vec(&self) -> Vector {
+        Vector::new(self.x, self.y)
+    }
+
     pub fn dist_to_point(&self, p: Point) -> Scalar {
         self.to_point_vec(p).length()
     }

@@ -25,6 +25,10 @@ line_drawing = "0.8.0"
 # nearest neighbor search
 acap = "0.2.0"
 
+# icp
+nalgebra = "0.19.0"
+ndarray = "0.15.1"
+
 # noise
 rand = "0.8.3"
 rand_distr = "0.4.0"
