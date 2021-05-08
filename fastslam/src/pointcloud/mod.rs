@@ -3,7 +3,7 @@ use rayon::iter::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use rayon::slice;
 use crate::geometry::point::Point;
 use crate::math::scalar::Scalar;
-use ndarray as nd;
+
 
 #[derive(Debug, Clone)]
 pub struct PointCloud {
@@ -50,20 +50,5 @@ impl PointCloud {
         let x_avg: Scalar = self.iter().map(|p: &Point| p.x).sum::<Scalar>() / self.size() as Scalar;
         let y_avg: Scalar = self.iter().map(|p: &Point| p.y).sum::<Scalar>() / self.size() as Scalar;
         Point::new(x_avg, y_avg)
-    }
-
-    pub fn to_ndarray(&self) -> nd::Array2<f64> {
-        let p0 = self.points[0];
-        let mut nd_pc: nd::Array2<f64> = nd::arr2(&[[p0.x, p0.y]]);
-
-        for p in self.iter().skip(1) {
-            let to_add = nd::arr2(&[[p.x, p.y]]);
-            match nd::concatenate(nd::Axis(0), &[nd_pc.view(), to_add.view()]){
-                Ok(r) => nd_pc = r,
-                _ => panic!("failed to create ndarray from pointcloud")
-            }
-        }
-
-        return nd_pc
     }
 }
