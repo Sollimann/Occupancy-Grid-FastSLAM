@@ -3,7 +3,7 @@ use crate::geometry::{Point, Vector};
 use rayon::prelude::ParallelIterator;
 use nalgebra as na;
 
-///
+
 /// Calculates the least-squares best-fit transform that maps corresponding points pc_a to pc_b
 /// in two-dimensions (x,y)
 /// Input:
@@ -59,4 +59,52 @@ pub fn best_fit_transform(mut pca: PointCloud, mut pcb: PointCloud) -> (na::Matr
     let t: na::Vector2<f64> = na_cb - rot * na_ca;
 
     return (rot, t)
+}
+
+
+
+/// Find the nearest (Euclidean) neighbor in pca for each point in pcb
+/// Input:
+///     pca: pointcloud in previous step
+///     pcb: pointcloud in current step
+/// Returns:
+///     distances: Euclidean distances of the nearest neighbor
+///     indices: dst indices of the nearest neighbor
+pub fn nearest_neighbor(pca: PointCloud, pcb: PointCloud) -> (Vec<f64>, Vec<i64>) {
+
+    let mut distances: Vec<f64> = vec![];
+    let mut indices: Vec<i64> = vec![];
+
+    // iterate over all points in pointcloud pca
+    pca.iter().enumerate().for_each(|(point_id, point)| {
+
+        // initialize min_distance
+        let mut min_distance: f64 = 10000.0;
+
+        // container of nearest neighbor
+        let mut min_index: i64 = -1;
+
+        // iterate over all points in pointcloud pcb
+        pcb.iter().enumerate().for_each(|(ref_id, reference)| {
+
+            // get difference vector and euclidean disntance between points
+            let dif_vector: &Vector = &reference.to_point_vec(*point);
+            let distance: f64 = dif_vector.length();
+
+            // set new minimum index if new minimum distance
+            if distance < min_distance {
+                min_distance = distance;
+                min_index = ref_id as i64;
+            }
+        });
+
+        if min_index == -1 {
+            panic!("min_index has not been set!")
+        }
+
+        distances.push(min_distance);
+        indices.push(min_index);
+    });
+
+    return (distances, indices)
 }
