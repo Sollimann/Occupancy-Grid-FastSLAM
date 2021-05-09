@@ -1,45 +1,45 @@
 use crate::pointcloud::PointCloud;
 use crate::geometry::{Point, Vector};
-use rayon::prelude::ParallelIterator;
 use nalgebra as na;
 
 
-/// Calculates the least-squares best-fit transform that maps corresponding points pc_a to pc_b
+/// Calculates the least-squares best-fit transform that maps corresponding points from A to B
 /// in two-dimensions (x,y)
 /// Input:
-///     pc_a: pointcloud in previous step
-///     pc_b: pointcloud in current step
+///     A: pointcloud in previous step
+///     B: pointcloud in current step
 /// Returns:
-///     rot: rotation angle
+///     R: rotation angle
 ///     t: translation vector
-pub fn best_fit_transform(mut pca: PointCloud, mut pcb: PointCloud) -> (na::Matrix2<f64>, na::Vector2<f64>) {
+#[allow(non_snake_case)]
+pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na::Vector2<f64>) {
 
     // make sure dimensions are the same
-    assert_eq!(pca.size(), pcb.size());
+    assert_eq!(A.size(), B.size());
 
-    // // convert my type of point to nalgebra point
+    // convert my type of point to nalgebra point
     let to_na_p2: fn(Point) -> na::Point2<f64> = |p: Point| na::Point2::new(p.x, p.y);
     let to_na_v2: fn(Point) -> na::Vector2<f64> = |p: Point| na::Vector2::new(p.x, p.y);
 
-
     // get centroid of each point cloud
-    let na_ca: na::Vector2<f64> = to_na_v2(pca.centroid());
-    let na_cb: na::Vector2<f64> = to_na_v2(pcb.centroid());
+    let centroid_A: na::Vector2<f64> = to_na_v2(A.centroid());
+    let centroid_B: na::Vector2<f64> = to_na_v2(A.centroid());
 
-    // convert to nalgebra library and center center point clouds
-    let na_pca: Vec<na::Point2<f64>> = pca.iter().map(|p: &Point| to_na_p2(*p)).collect();
-    let na_pcb: Vec<na::Point2<f64>> = pcb.iter().map(|p: &Point| to_na_p2(*p)).collect();
+    // convert to nalgebra library and center point clouds
+    let A_: Vec<na::Point2<f64>> = A.iter().map(|p: &Point| to_na_p2(*p)).collect();
+    let B_: Vec<na::Point2<f64>> = B.iter().map(|p: &Point| to_na_p2(*p)).collect();
 
     // compute cross-covariance
-    let cov: na::Matrix2<f64> = na_pca
+    let H: na::Matrix2<f64> = A_
         .iter()
-        .zip(na_pcb.iter())
-        .map(|(p, q)| (p.clone().coords - na_ca, q.clone().coords - na_cb))
-        .map(|(p, q)| q * p.transpose())
+        .zip(B_.iter())
+        .map(|(a, b)| (a.clone().coords - centroid_A, b.clone().coords - centroid_B))
+        .map(|(aa, bb)| bb * aa.transpose())
         .fold(na::Matrix2::zeros(), |sum, m| sum + m);
 
+    println!("H: {}", H);
     // compute SVD
-    let svd = na::linalg::SVD::new(cov, true, true);
+    let svd = na::linalg::SVD::new(H, true, true);
     let u: na::Matrix2<f64> = svd.u.unwrap();
     let v_t: na::Matrix2<f64> = svd.v_t.unwrap();
 
@@ -48,35 +48,36 @@ pub fn best_fit_transform(mut pca: PointCloud, mut pcb: PointCloud) -> (na::Matr
     assert_eq!(v_t.is_orthogonal(0.01), true);
 
     // get rotation matrix
-    let mut rot: na::Matrix2<f64> = v_t * u.transpose();
+    let mut R: na::Matrix2<f64> = v_t.transpose() * u.transpose();
 
     // special reflection case
-    if rot.determinant() < 0.0 {
-        rot.set_row(1, &(-1.0 * rot.row(1)));
+    if R.determinant() < 0.0 {
+        R.set_row(1, &(-1.0 * R.row(1)));
     }
 
     // compute translation offset
-    let t: na::Vector2<f64> = na_cb - rot * na_ca;
+    let t: na::Vector2<f64> = centroid_B - R * centroid_A;
 
-    return (rot, t)
+    return (R, t)
 }
 
 
 
-/// Find the nearest (Euclidean) neighbor in pca for each point in pcb
+/// Find the nearest (Euclidean) neighbor in A for each point in B
 /// Input:
-///     pca: pointcloud in previous step
-///     pcb: pointcloud in current step
+///     A: pointcloud in previous step
+///     B: pointcloud in current step
 /// Returns:
 ///     distances: Euclidean distances of the nearest neighbor
 ///     indices: dst indices of the nearest neighbor
-pub fn nearest_neighbor(pca: PointCloud, pcb: PointCloud) -> (Vec<f64>, Vec<i64>) {
+#[allow(non_snake_case)]
+pub fn nearest_neighbor(A: PointCloud, B: PointCloud) -> (Vec<f64>, Vec<i64>) {
 
     let mut distances: Vec<f64> = vec![];
     let mut indices: Vec<i64> = vec![];
 
     // iterate over all points in pointcloud pca
-    pca.iter().enumerate().for_each(|(point_id, point)| {
+    A.iter().for_each(|point| {
 
         // initialize min_distance
         let mut min_distance: f64 = 10000.0;
@@ -85,7 +86,7 @@ pub fn nearest_neighbor(pca: PointCloud, pcb: PointCloud) -> (Vec<f64>, Vec<i64>
         let mut min_index: i64 = -1;
 
         // iterate over all points in pointcloud pcb
-        pcb.iter().enumerate().for_each(|(ref_id, reference)| {
+        B.iter().enumerate().for_each(|(ref_id, reference)| {
 
             // get difference vector and euclidean disntance between points
             let dif_vector: &Vector = &reference.to_point_vec(*point);
