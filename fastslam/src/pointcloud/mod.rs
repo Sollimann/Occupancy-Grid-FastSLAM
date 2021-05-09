@@ -30,6 +30,10 @@ impl PointCloud {
         self.points.len()
     }
 
+    pub fn points(&self) -> Vec<Point> {
+        self.points.clone()
+    }
+
     pub fn add(&mut self, p: Point) {
         self.points.push(p);
     }

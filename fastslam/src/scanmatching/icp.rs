@@ -2,7 +2,6 @@ use crate::pointcloud::PointCloud;
 use crate::geometry::{Point, Vector};
 use nalgebra as na;
 
-
 /// Calculates the least-squares best-fit transform that maps corresponding points from A to B
 /// in two-dimensions (x,y)
 /// Input:
@@ -108,4 +107,39 @@ pub fn nearest_neighbor(A: PointCloud, B: PointCloud) -> (Vec<f64>, Vec<i64>) {
     });
 
     return (distances, indices)
+}
+
+
+/// The Iterative Closest Point method: finds best-fit transform that maps points A on to points B
+/// Input:
+///     A: pointcloud in previous step
+///     B: pointcloud in current step
+///     init_pose: (m+1)x(m+1) homogeneous transformation
+///     max_iterations: exit algorithm after max_iterations
+///     tolerance: convergence criteria
+/// Returns:
+///     T: final homogeneous transformation that maps A on to B
+///     distances: Euclidean distances (errors) of the nearest neighbor
+///     i: number of iterations to converge
+pub fn icp() {
+
+}
+
+#[allow(non_snake_case)]
+pub fn to_na_homogeneous(A: PointCloud) -> na::DMatrix<f64> {
+    let to_na_p2: fn(Point) -> na::Point2<f64> = |p: Point| na::Point2::new(p.x, p.y);
+
+    let A_homo_vec: Vec<f64> = A
+        .iter()
+        .map(|p| to_na_p2(*p))
+        .map(|p| p.to_homogeneous())
+        .map(|p| {
+            let d: [f64; 3] = p.data.0[0];
+            vec![d[0], d[1], d[2]]
+        })
+        .flatten()
+        .collect();
+
+    let A_homo_mat = na::DMatrix::from_row_slice(A.size(), 3, &A_homo_vec);
+    return A_homo_mat
 }
