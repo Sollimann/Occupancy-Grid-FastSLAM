@@ -35,7 +35,7 @@ fn test_best_fit_transform_shifted_pointclouds() {
     let a = vec![p0, p1, p2, p3];
     let b = vec![p0 * 3.0, p1 * 1.0, p2 * 2.0, p3 * 1.0];
     let A = PointCloud::new(a);
-    let B = PointCloud::new(b.clone());
+    let B = PointCloud::new(b);
 
     let (R, t) = best_fit_transform(A, B);
 
