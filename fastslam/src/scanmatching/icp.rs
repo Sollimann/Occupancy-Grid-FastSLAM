@@ -23,7 +23,7 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
 
     // get centroid of each point cloud
     let centroid_A: na::Vector2<f64> = to_na_v2(A.centroid());
-    let centroid_B: na::Vector2<f64> = to_na_v2(A.centroid());
+    let centroid_B: na::Vector2<f64> = to_na_v2(B.centroid());
 
     // convert to nalgebra library and center point clouds
     let A_: Vec<na::Point2<f64>> = A.iter().map(|p: &Point| to_na_p2(*p)).collect();
@@ -37,7 +37,7 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
         .map(|(aa, bb)| bb * aa.transpose())
         .fold(na::Matrix2::zeros(), |sum, m| sum + m);
 
-    println!("H: {}", H);
+
     // compute SVD
     let svd = na::linalg::SVD::new(H, true, true);
     let u: na::Matrix2<f64> = svd.u.unwrap();
@@ -48,7 +48,7 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
     assert_eq!(v_t.is_orthogonal(0.01), true);
 
     // get rotation matrix
-    let mut R: na::Matrix2<f64> = v_t.transpose() * u.transpose();
+    let mut R: na::Matrix2<f64> = v_t * u;
 
     // special reflection case
     if R.determinant() < 0.0 {

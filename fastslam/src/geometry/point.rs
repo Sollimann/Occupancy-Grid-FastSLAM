@@ -62,6 +62,15 @@ impl ops::Sub<Vector> for Point {
     }
 }
 
+/// overload Point multiplied by Scalar
+impl ops::Mul<Scalar> for Point {
+    type Output = Point;
+
+    fn mul(self, s: Scalar) -> Self::Output {
+        Point::new(self.x * s, self.y * s)
+    }
+}
+
 
 impl Point {
     pub fn new(x: Scalar, y: Scalar) -> Point {

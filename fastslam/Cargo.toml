@@ -32,6 +32,9 @@ nalgebra = "0.26.2"
 rand = "0.8.3"
 rand_distr = "0.4.0"
 
+# testing
+approx = "0.4.0"
+
 [lib]
 name = "fastslam"
 path = "src/lib.rs"
