@@ -19,6 +19,7 @@ impl Default for CellState {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct GridMap {
     pub map_size: usize, // assuming quadratic map, with (0,0) in the middle
     pub cells: Vec<Vec<CellState>>,

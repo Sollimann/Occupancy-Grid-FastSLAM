@@ -2,7 +2,6 @@ use opengl_graphics::GlGraphics;
 use fastslam::render::{RenderConfig, Draw};
 use fastslam::simulator::Robot;
 use fastslam::sensor::laserscanner::Scan;
-use fastslam::particlefilter::ParticleFilter;
 use fastslam::geometry;
 use piston_window::{RenderArgs, Key};
 use graphics::{Transformed};
@@ -11,6 +10,7 @@ use fastslam::simulator::Direction;
 use fastslam::odometry::Pose;
 use fastslam::simulator::noise::{Noise, gaussian};
 use fastslam::geometry::Point;
+use fastslam::particlefilter::particle::Particle;
 
 pub struct Game {
     key_pressed: bool,
@@ -18,7 +18,7 @@ pub struct Game {
     sim_gl: GlGraphics,
     robot: Robot,
     last_scan: Scan,
-    particle_filter: ParticleFilter,
+    particle_filter: Particle, // will be replaced by particle filter
     noise: Noise,
     pub render_config: RenderConfig,
     pub objects: Vec<geometry::Line>
@@ -32,7 +32,7 @@ impl Game {
         render_config: RenderConfig,
         robot: Robot,
         last_scan: Scan,
-        particle_filter: ParticleFilter,
+        particle_filter: Particle,
         objects: Vec<geometry::Line>
     ) -> Game {
 

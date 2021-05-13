@@ -7,3 +7,4 @@ pub mod sensor;
 pub mod render;
 pub mod simulator;
 pub mod particlefilter;
+pub mod scanmatching;

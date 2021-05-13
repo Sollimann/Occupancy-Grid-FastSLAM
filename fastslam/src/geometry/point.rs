@@ -62,6 +62,15 @@ impl ops::Sub<Vector> for Point {
     }
 }
 
+/// overload Point multiplied by Scalar
+impl ops::Mul<Scalar> for Point {
+    type Output = Point;
+
+    fn mul(self, s: Scalar) -> Self::Output {
+        Point::new(self.x * s, self.y * s)
+    }
+}
+
 
 impl Point {
     pub fn new(x: Scalar, y: Scalar) -> Point {
@@ -72,6 +81,10 @@ impl Point {
         let x = p.x - self.x;
         let y = p.y - self.y;
         Vector::new(x, y)
+    }
+
+    pub fn to_vec(&self) -> Vector {
+        Vector::new(self.x, self.y)
     }
 
     pub fn dist_to_point(&self, p: Point) -> Scalar {
