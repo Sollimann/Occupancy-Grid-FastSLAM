@@ -6,7 +6,7 @@ use approx::*;
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_identical_pointclouds() {
+fn test_best_fit_transform_no_reflection_case_0() {
     let p0 = Point::new(1.0, 2.0);
     let p1 = Point::new(2.0, 2.0);
     let p2 = Point::new(3.0, 3.0);
@@ -27,7 +27,7 @@ fn test_best_fit_transform_identical_pointclouds() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_shifted_pointclouds() {
+fn test_best_fit_transform_no_reflection_case_1() {
     let p0 = Point::new(1.0, 2.0);
     let p1 = Point::new(2.0, 2.0);
     let p2 = Point::new(3.0, 3.0);
@@ -51,7 +51,7 @@ fn test_best_fit_transform_shifted_pointclouds() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_shifted_pointclouds_negative() {
+fn test_best_fit_transform_no_reflection_case_2() {
     let a = vec![
         Point::new(1.0, 2.0),
         Point::new(2.0, 2.0),
@@ -82,7 +82,7 @@ fn test_best_fit_transform_shifted_pointclouds_negative() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_pos_and_neg_and_switched() {
+fn test_best_fit_transform_no_reflection_case_3() {
     let p0 = Point::new(1.0, 2.0);
     let p1 = Point::new(2.0, 2.0);
     let p2 = Point::new(3.0, 3.0);
@@ -105,7 +105,7 @@ fn test_best_fit_transform_pointclouds_pos_and_neg_and_switched() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_pointcloud_no_reflection() {
+fn test_best_fit_pointcloud_reflection_case_0() {
     let a = vec![
         Point::new(1.0, -2.0),
         Point::new(2.0, 2.0),
@@ -125,8 +125,6 @@ fn test_best_fit_pointcloud_no_reflection() {
 
     let (R, t) = best_fit_transform(A, B);
 
-    println!("R: {}", R);
-    println!("t: {}", t);
     let R_expected = na::Matrix2::new(-0.85207599, -0.52341811,
                                       0.52341811, -0.85207599);
 
@@ -138,7 +136,7 @@ fn test_best_fit_pointcloud_no_reflection() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_large() {
+fn test_best_fit_transform_reflection_case_1() {
     let a = vec![
         Point::new(3.0, -2.0),
         Point::new(-2.0, 2.0),
@@ -163,9 +161,6 @@ fn test_best_fit_transform_pointclouds_large() {
 
     let t_expected = na::Vector2::new(43.17585206, 31.46728233);
 
-    println!("R final {}", R);
-    println!("t: {}", t);
-
     assert_eq!(relative_eq!(R, R_expected, epsilon = 1.0e-1), true);
     assert_eq!(relative_eq!(t, t_expected, epsilon = 1.0e-1), true);
 }
@@ -173,7 +168,7 @@ fn test_best_fit_transform_pointclouds_large() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_no_reflection_large() {
+fn test_best_fit_transform_no_reflection_case_4() {
     let a = vec![
         Point::new(30.0, -2.0),
         Point::new(-32.0, 2.0),
@@ -204,7 +199,7 @@ fn test_best_fit_transform_pointclouds_no_reflection_large() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_reflection_small() {
+fn test_best_fit_transform_reflection_case_2() {
     let a = vec![
         Point::new(3.0, -2.0),
         Point::new(3.0, 2.0),
@@ -228,16 +223,13 @@ fn test_best_fit_transform_pointclouds_reflection_small() {
 
     let t_expected = na::Vector2::new( 122.70051175,-3.24931067);
 
-    println!("R final {}", R);
-    println!("t: {}", t);
-
     assert_eq!(relative_eq!(R, R_expected, epsilon = 1.0e-1), true);
     assert_eq!(relative_eq!(t, t_expected, epsilon = 1.0e-1), true);
 }
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_reflection_many_points() {
+fn test_best_fit_transform_no_reflection_case_5() {
     let a = vec![
         Point::new(3.0, -2.0),
         Point::new(3.0, 2.0),
@@ -290,7 +282,7 @@ fn test_best_fit_transform_pointclouds_reflection_many_points() {
 
 #[test]
 #[allow(non_snake_case)]
-fn test_best_fit_transform_pointclouds_reflection_another_reflection() {
+fn test_best_fit_transform_reflection_case_3() {
     let a = vec![
         Point::new(1.0, 100.0),
         Point::new(0.0, 0.0),
@@ -328,7 +320,79 @@ fn test_best_fit_transform_pointclouds_reflection_another_reflection() {
     assert_eq!(relative_eq!(R2, R_expected, epsilon = 1.0e-1), true);
     assert_eq!(relative_eq!(t2, t_expected, epsilon = 1.0e-1), true);
 }
-//
+
+#[test]
+#[allow(non_snake_case)]
+fn test_best_fit_transform_reflection_case_4() {
+    let a = vec![
+        Point::new(1.0, 100.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(-1.0, -100.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(500.0, -90.0),
+    ];
+
+    let b = vec![
+        Point::new(-1.0, -100.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(100.0, -300.0),
+    ];
+
+    let A = PointCloud::new(a);
+    let B = PointCloud::new(b);
+
+    let (R, t) = best_fit_transform(A, B);
+    let R_expected = na::Matrix2::new(0.4340702, 0.90087905,
+                                                -0.90087905, 0.4340702);
+
+    let t_expected = na::Vector2::new( -5.27942622, 12.78654903);
+
+    assert_eq!(relative_eq!(R, R_expected, epsilon = 1.0e-1), true);
+    assert_eq!(relative_eq!(t, t_expected, epsilon = 1.0e-1), true);
+}
+
+#[test]
+#[allow(non_snake_case)]
+fn test_best_fit_transform_reflection_case_5() {
+    let a = vec![
+        Point::new(-1900.0, 1200.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(-1.0, -100.0),
+        Point::new(0.0, 100.0),
+        Point::new(0.0, 0.0),
+        Point::new(500.0, -90.0),
+    ];
+
+    let b = vec![
+        Point::new(-1.0, -100.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(0.0, 0.0),
+        Point::new(1000.0, -3000.0),
+    ];
+
+    let A = PointCloud::new(a);
+    let B = PointCloud::new(b);
+
+    let (R, t) = best_fit_transform(A, B);
+    let R_expected = na::Matrix2::new(0.6243408, 0.78115208,
+                                                -0.78115208, 0.6243408);
+
+    let t_expected = na::Vector2::new( 143.80323661, -698.20176373);
+
+    assert_eq!(relative_eq!(R, R_expected, epsilon = 1.0e-1), true);
+    assert_eq!(relative_eq!(t, t_expected, epsilon = 1.0e-1), true);
+}
+
 #[test]
 #[allow(non_snake_case)]
 fn improper_rotation_case_1()  {
@@ -340,10 +404,11 @@ fn improper_rotation_case_1()  {
 
 
     let mut R = Vt.transpose() * U.transpose();
+    let S:  na::Vector2<f64> = na::Vector2::new(1.0, 0.0);
 
     if R.determinant() < 0.0 {
         println!("RESULT: \n \n ");
-        R = handle_improper_rotation(R, U, Vt);
+        R = handle_improper_rotation(R, U, S,Vt);
     }
 }
 
@@ -358,9 +423,10 @@ fn improper_rotation_case_2()  {
 
 
     let mut R = Vt.transpose() * U.transpose();
+    let S:  na::Vector2<f64> = na::Vector2::new(1.0, 0.0);
 
     if R.determinant() < 0.0 {
         println!("RESULT: \n \n ");
-        R = handle_improper_rotation(R, U, Vt);
+        R = handle_improper_rotation(R, U, S, Vt);
     }
 }

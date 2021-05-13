@@ -42,7 +42,8 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
     // https://medium.com/machine-learning-world/linear-algebra-points-matching-with-svd-in-3d-space-2553173e8fed
     let svd = na::linalg::SVD::new(H, true, true);
     let U: na::Matrix2<f64> = svd.u.unwrap();
-    let mut Vt: na::Matrix2<f64> = svd.v_t.unwrap();
+    let S: na::Vector2<f64> = svd.singular_values;
+    let Vt: na::Matrix2<f64> = svd.v_t.unwrap();
 
     // Check that decomposition produces orthogonal left and right singular vectors
     assert_eq!(U.is_orthogonal(0.01), true);
@@ -53,7 +54,7 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
 
     // special reflection case
     if R.determinant() < 0.0 {
-        R = handle_improper_rotation(R, U, Vt);
+        R = handle_improper_rotation(R, U, S, Vt);
     }
 
     // compute translation offset
@@ -63,23 +64,20 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
 }
 
 type M2x2 = na::Matrix2<f64>;
+type V2 = na::Vector2<f64>;
 #[allow(non_snake_case)]
-pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, mut Vt: M2x2) -> M2x2 {
+pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, S: V2, mut Vt: M2x2) -> M2x2 {
 
-    // println!("R det before: {}", R.determinant());
-    // println!("R before: {}", R);
-    // println!("U: {}", U);
-    // println!("Vt before: {}", Vt);
+    let row = if S[0] < S[1] {
+        0
+    } else {
+        1
+    };
 
 
-    Vt.row_mut(1).mul_assign(-1.0);
+    Vt.row_mut(row).mul_assign(-1.0);
     R = Vt.transpose() * U.transpose();
     assert!(R.determinant() >= 0.0);
-
-
-    // println!("Vt after: {}", Vt);
-    // println!("R det after: {}", R.determinant());
-    // println!("R after: {}", R);
 
     return R
 }
