@@ -1,6 +1,7 @@
 use crate::pointcloud::PointCloud;
 use crate::geometry::{Point, Vector};
 use nalgebra as na;
+use std::ops::MulAssign;
 
 /// Calculates the least-squares best-fit transform that maps corresponding points from A to B
 /// in two-dimensions (x,y)
@@ -34,24 +35,25 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
         .zip(B_.iter())
         .map(|(a, b)| (a.clone().coords - centroid_A, b.clone().coords - centroid_B))
         .map(|(aa, bb)| bb * aa.transpose())
-        .fold(na::Matrix2::zeros(), |sum, m| sum + m);
-
+        .fold(na::Matrix2::zeros(), |sum, m| sum + m)
+        .transpose();
 
     // compute SVD
+    // https://medium.com/machine-learning-world/linear-algebra-points-matching-with-svd-in-3d-space-2553173e8fed
     let svd = na::linalg::SVD::new(H, true, true);
-    let u: na::Matrix2<f64> = svd.u.unwrap();
-    let v_t: na::Matrix2<f64> = svd.v_t.unwrap();
+    let U: na::Matrix2<f64> = svd.u.unwrap();
+    let mut Vt: na::Matrix2<f64> = svd.v_t.unwrap();
 
     // Check that decomposition produces orthogonal left and right singular vectors
-    assert_eq!(u.is_orthogonal(0.01), true);
-    assert_eq!(v_t.is_orthogonal(0.01), true);
+    assert_eq!(U.is_orthogonal(0.01), true);
+    assert_eq!(Vt.is_orthogonal(0.01), true);
 
     // get rotation matrix
-    let mut R: na::Matrix2<f64> = v_t * u;
+    let mut R: na::Matrix2<f64> = Vt.transpose() * U.transpose();
 
     // special reflection case
     if R.determinant() < 0.0 {
-        R.set_row(1, &(-1.0 * R.row(1)));
+        R = handle_improper_rotation(R, U, Vt);
     }
 
     // compute translation offset
@@ -60,6 +62,27 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
     return (R, t)
 }
 
+type M2x2 = na::Matrix2<f64>;
+#[allow(non_snake_case)]
+pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, mut Vt: M2x2) -> M2x2 {
+
+    // println!("R det before: {}", R.determinant());
+    // println!("R before: {}", R);
+    // println!("U: {}", U);
+    // println!("Vt before: {}", Vt);
+
+
+    Vt.row_mut(1).mul_assign(-1.0);
+    R = Vt.transpose() * U.transpose();
+    assert!(R.determinant() >= 0.0);
+
+
+    // println!("Vt after: {}", Vt);
+    // println!("R det after: {}", R.determinant());
+    // println!("R after: {}", R);
+
+    return R
+}
 
 
 /// Find the nearest (Euclidean) neighbor in A for each point in B
@@ -133,11 +156,10 @@ pub fn to_na_homogeneous(A: PointCloud) -> na::DMatrix<f64> {
         .iter()
         .map(|p| to_na_p2(*p))
         .map(|p| p.to_homogeneous())
-        .map(|p| {
+        .flat_map(|p| {
             let d: [f64; 3] = p.data.0[0];
             vec![d[0], d[1], d[2]]
         })
-        .flatten()
         .collect();
 
     let A_homo_mat = na::DMatrix::from_row_slice(A.size(), 3, &A_homo_vec);
