@@ -142,7 +142,27 @@ pub fn nearest_neighbor(A: PointCloud, B: PointCloud) -> (Vec<f64>, Vec<i64>) {
 ///     T: final homogeneous transformation that maps A on to B
 ///     distances: Euclidean distances (errors) of the nearest neighbor
 ///     i: number of iterations to converge
-pub fn icp() {
+#[allow(non_snake_case)]
+pub fn icp(A: PointCloud, B: PointCloud, max_iterations: usize, tolerance: f64) {
+
+    // make points homogeneous, copy them to maintain the originals
+    let A_hom: na::DMatrix<f64> = to_na_homogeneous(A.clone());
+
+    // Homogeneous transformation matrix
+    let mut T: na::Matrix3<f64> = na::Matrix3::identity();
+
+    // Pose difference
+    let mut pose_dif: na::Vector3<f64> = na::Vector3::zeros();
+
+    let mut prev_err = 0.0;
+    let mut mean_err = 0.0;
+
+    (0..max_iterations).into_iter().for_each(|i| {
+
+        // get neighbor information
+        let (distances, indices) = nearest_neighbor(A.clone(), B.clone());
+
+    });
 
 }
 
