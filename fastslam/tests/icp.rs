@@ -1,5 +1,5 @@
 use nalgebra as na;
-use na::{DMatrix, U2, Dynamic, MatrixXx2};
+use na::{DMatrix, U2, Dynamic, MatrixXx2, MatrixXx3};
 use fastslam::geometry::Point;
 use fastslam::scanmatching::icp::{to_na_homogeneous, icp};
 use fastslam::pointcloud::PointCloud;
@@ -16,12 +16,9 @@ fn test_homogeneous() {
     let v = vec![p0, p1, p2, p3];
 
     let dm1 = Matrix2xXf64::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-    // let a = dm1.to_homogeneous();
-    println!("m: {}", dm1);
 
     let p2 = na::Point2::new(2.3, 3.5);
     let p2_homo = p2.to_homogeneous().data;
-    println!("p2_homo: {:?}", p2_homo);
 }
 
 #[test]
@@ -44,9 +41,8 @@ fn test_icp_case_0() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let icp = icp(A, B, 20, 0.0001);
+    let icp = icp(A, B, 1, 0.0001);
 }
-
 
 #[test]
 #[allow(non_snake_case)]
@@ -57,7 +53,8 @@ fn test_convert_to_na_homogeneous() {
     let p3 = Point::new(-1.0, -2.0);
     let a = vec![p0, p1, p2, p3];
     let A = PointCloud::new(a);
-    let A_homo = to_na_homogeneous(A);
+    let A_homo = to_na_homogeneous(&A);
 
     println!("A_homo: {}", A_homo);
 }
+
