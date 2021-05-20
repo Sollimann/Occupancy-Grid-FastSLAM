@@ -21,7 +21,7 @@ type V2 = na::Vector2<f64>;
 ///     R: rotation angle
 ///     t: translation vector
 #[allow(non_snake_case)]
-pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (M3x3, M2x2, V2) {
+pub fn best_fit_transform(A: &PointCloud, B: &PointCloud) -> (M3x3, M2x2, V2) {
 
     // make sure dimensions are the same
     assert_eq!(A.size(), B.size());
@@ -159,7 +159,7 @@ pub fn nearest_neighbor(A: &PointCloud, B: &PointCloud) -> (Vec<f64>, Vec<i64>) 
 ///     distances: Euclidean distances (errors) of the nearest neighbor
 ///     i: number of iterations to converge
 #[allow(non_snake_case)]
-pub fn icp(A: PointCloud, B: PointCloud, max_iterations: usize, tolerance: f64) -> Pose {
+pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64) -> Pose {
 
     let mut A_trans = A.clone();
 
@@ -188,7 +188,7 @@ pub fn icp(A: PointCloud, B: PointCloud, max_iterations: usize, tolerance: f64) 
         println!("A_hom_trans {}", B_ordered);
 
         // Get best transformation matrix for current pointclouds
-        let (T_t, _, _) = best_fit_transform(A_trans, B_ordered);
+        let (T_t, _, _) = best_fit_transform(&A_trans, &B_ordered);
 
         println!("A_hom {}", A_hom);
 
@@ -213,7 +213,7 @@ pub fn icp(A: PointCloud, B: PointCloud, max_iterations: usize, tolerance: f64) 
     };
 
     // Homogeneous transformation matrix
-    let (T, _, _) = best_fit_transform(A, A_trans);
+    let (T, _, _) = best_fit_transform(A, &A_trans);
 
     return to_pose(T);
 }

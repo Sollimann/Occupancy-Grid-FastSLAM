@@ -41,7 +41,7 @@ fn test_icp_case_0() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let icp = icp(A, B, 1, 0.0001);
+    let icp = icp(&A, &B, 1, 0.0001);
 }
 
 #[test]

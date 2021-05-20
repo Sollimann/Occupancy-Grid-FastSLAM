@@ -7,7 +7,7 @@ use crate::pointcloud::PointCloud;
 
 #[derive(Debug, Clone)]
 pub struct Particle {
-    prev_observation: PointCloud,
+    pub prev_pointcloud: PointCloud,
     pub pose: Pose, // particle's pose (x, y, theta)
     pub weight: Scalar, // particle's current weight
     pub gridmap: GridMap // particle's estimated grid map of the environment
@@ -17,7 +17,7 @@ pub struct Particle {
 impl Default for Particle {
     fn default() -> Self {
         Particle {
-            prev_observation: PointCloud::empty(),
+            prev_pointcloud: PointCloud::empty(),
             pose: Pose::default(),
             weight: 1.0,
             gridmap: GridMap::default()
@@ -28,7 +28,7 @@ impl Default for Particle {
 impl Particle {
     pub fn new(pose: Pose, weight: Scalar, gridmap: GridMap) -> Self {
         Particle {
-            prev_observation: PointCloud::empty(),
+            prev_pointcloud: PointCloud::empty(),
             pose,
             weight,
             gridmap
@@ -36,7 +36,7 @@ impl Particle {
     }
 
     pub fn get_prev_observation(&self) -> PointCloud {
-        self.prev_observation.clone()
+        self.prev_pointcloud.clone()
     }
 
     pub fn cycle(&mut self, scan: &Scan, pose: &Pose) {
