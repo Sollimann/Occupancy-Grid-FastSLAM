@@ -5,6 +5,9 @@ use crate::particlefilter::particle::Particle;
 //use rayon::iter::{IntoParallelRefMutIterator, IntoParallelIterator};
 use rayon::prelude::*;
 use crate::math::timer::Timer;
+use crate::scanmatching::icp::icp;
+use crate::pointcloud::PointCloud;
+use crate::geometry::Point;
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
@@ -64,14 +67,20 @@ impl ParticleFilter {
             .for_each(|p: &mut Particle| {
                 p.weight = 2.0;
 
-
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let x_initial = Self::motion_model(p.pose.clone(), gain.clone(), dt);
+                let x_initial = Self::motion_model(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
                 // to compute a pose estimate x*_t
+                let curr_pointcloud = scan.to_pointcloud(&p.pose);
+                if p.prev_pointcloud.size() == 0 {
+                    p.prev_pointcloud = curr_pointcloud.clone();
+                }
+
+                let pose_dif = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.01);
+                p.pose = x_initial + pose_dif
 
                 // step 3.)
                 // sample points around the pose x*_t (using nearest neighbor?)

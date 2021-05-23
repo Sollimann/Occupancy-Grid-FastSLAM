@@ -14,7 +14,7 @@ fn test_best_fit_transform_no_reflection_case_0() {
     let A = PointCloud::new(vec![p0, p1, p2, p3]);
     let B = A.clone();
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
 
     let R_expected = na::Matrix2::new(1.0, 0.0,
                                                 0.0, 1.0);
@@ -37,7 +37,7 @@ fn test_best_fit_transform_no_reflection_case_1() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
 
     let R_expected = na::Matrix2::new(0.99766257, 0.06833305,
                                                 -0.06833305 , 0.99766257);
@@ -69,7 +69,7 @@ fn test_best_fit_transform_no_reflection_case_2() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(-0.983282,   -0.18208926,
                                                 0.18208926, -0.983282);
 
@@ -92,7 +92,7 @@ fn test_best_fit_transform_no_reflection_case_3() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b.clone());
 
-    let (R, t) = best_fit_transform(B, A);
+    let (_, R, t) = best_fit_transform(&B, &A);
 
     let R_expected = na::Matrix2::new(0.91036648, -0.41380294,
                                       0.41380294, 0.91036648);
@@ -123,7 +123,7 @@ fn test_best_fit_pointcloud_reflection_case_0() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
 
     let R_expected = na::Matrix2::new(-0.85207599, -0.52341811,
                                       0.52341811, -0.85207599);
@@ -154,7 +154,7 @@ fn test_best_fit_transform_reflection_case_1() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
 
     let R_expected = na::Matrix2::new(-0.68895316, -0.72480586,
                                                     0.72480586, -0.68895316);
@@ -186,7 +186,7 @@ fn test_best_fit_transform_no_reflection_case_4() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
 
     let R_expected = na::Matrix2::new(0.97272514, -0.23196079,
                                       0.23196079,  0.97272514);
@@ -217,7 +217,7 @@ fn test_best_fit_transform_reflection_case_2() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(0.01979609, -0.99980404,
                                       0.99980404, 0.01979609);
 
@@ -270,7 +270,7 @@ fn test_best_fit_transform_no_reflection_case_5() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(-0.69839246, -0.71571501,
                                       0.71571501, -0.69839246);
 
@@ -306,7 +306,7 @@ fn test_best_fit_transform_reflection_case_3() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R1, t1) = best_fit_transform(A.clone(), B.clone());
+    let (_, R1, t1) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(-1.0,  0.0,
                                       0.0, -1.0);
 
@@ -315,7 +315,7 @@ fn test_best_fit_transform_reflection_case_3() {
     assert_eq!(relative_eq!(R1, R_expected, epsilon = 1.0e-1), true);
     assert_eq!(relative_eq!(t1, t_expected, epsilon = 1.0e-1), true);
 
-    let (R2, t2) = best_fit_transform(B, A);
+    let (_, R2, t2) = best_fit_transform(&B, &A);
 
     assert_eq!(relative_eq!(R2, R_expected, epsilon = 1.0e-1), true);
     assert_eq!(relative_eq!(t2, t_expected, epsilon = 1.0e-1), true);
@@ -347,7 +347,7 @@ fn test_best_fit_transform_reflection_case_4() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(0.4340702, 0.90087905,
                                                 -0.90087905, 0.4340702);
 
@@ -383,7 +383,7 @@ fn test_best_fit_transform_reflection_case_5() {
     let A = PointCloud::new(a);
     let B = PointCloud::new(b);
 
-    let (R, t) = best_fit_transform(A, B);
+    let (_, R, t) = best_fit_transform(&A, &B);
     let R_expected = na::Matrix2::new(0.6243408, 0.78115208,
                                                 -0.78115208, 0.6243408);
 
@@ -407,7 +407,6 @@ fn improper_rotation_case_1()  {
     let S:  na::Vector2<f64> = na::Vector2::new(1.0, 0.0);
 
     if R.determinant() < 0.0 {
-        println!("RESULT: \n \n ");
         R = handle_improper_rotation(R, U, S,Vt);
     }
 }
@@ -426,7 +425,6 @@ fn improper_rotation_case_2()  {
     let S:  na::Vector2<f64> = na::Vector2::new(1.0, 0.0);
 
     if R.determinant() < 0.0 {
-        println!("RESULT: \n \n ");
         R = handle_improper_rotation(R, U, S, Vt);
     }
 }

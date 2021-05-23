@@ -1,5 +1,4 @@
 use crate::geometry::point::Point;
-use crate::math::scalar::Angle;
 use crate::odometry::pose::Pose;
 use crate::odometry::twist::Twist;
 

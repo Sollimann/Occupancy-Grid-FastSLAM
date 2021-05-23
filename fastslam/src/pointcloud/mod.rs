@@ -13,7 +13,7 @@ pub struct PointCloud {
 /// decide how a Point should be displayed when formatting and printing
 impl fmt::Display for PointCloud {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Pointcloud size: ({})", self.size())
+        write!(f, "Pointcloud: ({:?})", self.points())
     }
 }
 
@@ -36,6 +36,13 @@ impl PointCloud {
 
     pub fn add(&mut self, p: Point) {
         self.points.push(p);
+    }
+
+    pub fn get(&self, index: usize) -> Point {
+        match self.points.get(index) {
+            None => panic!("index {} does not exist", index),
+            Some(p) => p.clone()
+        }
     }
 
     pub fn iter(&self) -> std::slice::Iter<Point> {

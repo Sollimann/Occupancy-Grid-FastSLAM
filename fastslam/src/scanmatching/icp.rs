@@ -2,6 +2,15 @@ use crate::pointcloud::PointCloud;
 use crate::geometry::{Point, Vector};
 use nalgebra as na;
 use std::ops::MulAssign;
+use na::{U1, U2, U3, Dynamic};
+use rand_distr::num_traits::abs;
+use crate::odometry::Pose;
+use std::borrow::Borrow;
+
+
+type M3x3 = na::Matrix3<f64>;
+type M2x2 = na::Matrix2<f64>;
+type V2 = na::Vector2<f64>;
 
 /// Calculates the least-squares best-fit transform that maps corresponding points from A to B
 /// in two-dimensions (x,y)
@@ -12,7 +21,7 @@ use std::ops::MulAssign;
 ///     R: rotation angle
 ///     t: translation vector
 #[allow(non_snake_case)]
-pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na::Vector2<f64>) {
+pub fn best_fit_transform(A: &PointCloud, B: &PointCloud) -> (M3x3, M2x2, V2) {
 
     // make sure dimensions are the same
     assert_eq!(A.size(), B.size());
@@ -60,11 +69,17 @@ pub fn best_fit_transform(A: PointCloud, B: PointCloud) -> (na::Matrix2<f64>, na
     // compute translation offset
     let t: na::Vector2<f64> = centroid_B - R * centroid_A;
 
-    return (R, t)
+
+    // create transformation matrix
+    let mut T: na::Matrix3<f64> = R.clone().fixed_resize(0.0);
+    let t3: na::Vector3<f64> = t.fixed_resize(1.0);
+    T.set_column(2, &t3);
+
+
+
+    return (T, R, t)
 }
 
-type M2x2 = na::Matrix2<f64>;
-type V2 = na::Vector2<f64>;
 #[allow(non_snake_case)]
 pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, S: V2, mut Vt: M2x2) -> M2x2 {
 
@@ -83,7 +98,8 @@ pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, S: V2, mut Vt: M2x2) -> M2
 }
 
 
-/// Find the nearest (Euclidean) neighbor in A for each point in B
+/// For each point in A (in sequence), find the nearest neighbor by index and distance
+/// in the neighboring pointcloud B
 /// Input:
 ///     A: pointcloud in previous step
 ///     B: pointcloud in current step
@@ -91,7 +107,7 @@ pub fn handle_improper_rotation(mut R: M2x2, U: M2x2, S: V2, mut Vt: M2x2) -> M2
 ///     distances: Euclidean distances of the nearest neighbor
 ///     indices: dst indices of the nearest neighbor
 #[allow(non_snake_case)]
-pub fn nearest_neighbor(A: PointCloud, B: PointCloud) -> (Vec<f64>, Vec<i64>) {
+pub fn nearest_neighbor(A: &PointCloud, B: &PointCloud) -> (Vec<f64>, Vec<i64>) {
 
     let mut distances: Vec<f64> = vec![];
     let mut indices: Vec<i64> = vec![];
@@ -142,12 +158,97 @@ pub fn nearest_neighbor(A: PointCloud, B: PointCloud) -> (Vec<f64>, Vec<i64>) {
 ///     T: final homogeneous transformation that maps A on to B
 ///     distances: Euclidean distances (errors) of the nearest neighbor
 ///     i: number of iterations to converge
-pub fn icp() {
+#[allow(non_snake_case)]
+pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64) -> Pose {
 
+    let mut A_trans = A.clone();
+
+    // Homogeneous transformation matrix
+    //let mut T: na::Matrix3<f64> = na::Matrix3::identity();
+
+    let mut prev_err = 0.0;
+    let mut mean_err = 0.0;
+
+    for i in 0..max_iterations {
+
+        // get neighbor information
+        let (distances, indices) = nearest_neighbor(&A_trans, &B);
+
+        // Homogeneous version of A
+        let A_hom = to_na_homogeneous(&A_trans);
+
+        // Re-arrange pointcloud B according to nearest neighbors in A
+        let mut B_ordered = PointCloud::empty();
+
+        indices.into_iter().for_each(|i| {
+            let point = B.get(i as usize);
+            B_ordered.add(point);
+        });
+
+        // Get best transformation matrix for current pointclouds
+        let (T_t, _, _) = best_fit_transform(&A_trans, &B_ordered);
+
+        // Get transformed point cloud A
+        let A_hom_trans: na::OMatrix<f64, Dynamic, U3> = (T_t * A_hom.transpose()).transpose();
+        A_trans = from_na_homogeneous(&A_hom_trans);
+
+        // compute mean error
+        mean_err = distances.iter().sum::<f64>() / distances.len() as f64;
+        if abs(prev_err - mean_err) < tolerance {
+            break;
+        }
+
+        // update prev error with current error
+        prev_err = mean_err;
+    };
+
+    // Homogeneous transformation matrix
+    let (T, _, _) = best_fit_transform(A, &A_trans);
+
+    return to_pose(T);
 }
 
 #[allow(non_snake_case)]
-pub fn to_na_homogeneous(A: PointCloud) -> na::DMatrix<f64> {
+fn from_na_homogeneous(A_hom: &na::OMatrix<f64, Dynamic, U3>) -> PointCloud {
+    let mut A = PointCloud::empty();
+    let A_trans = A_hom.clone().remove_column(2);
+
+    A_trans.row_iter().for_each(|row| {
+        let r: Vec<f64> = row.iter().map(|i| i.clone() as f64).collect();
+        A.add(Point::new(r[0], r[1]));
+    });
+
+    A
+}
+
+#[allow(non_snake_case)]
+fn to_pose(T: M3x3) -> Pose {
+    // vec of size 9
+    let row: Vec<f64> = T.row_iter()
+        .flat_map(|row| {
+            let r: Vec<f64> = row.iter().map(|i| i.clone() as f64).collect();
+            vec![r[0], r[1], r[2]]
+        })
+        .collect();
+
+    // get from transformation matrix
+    let T_00 = row[0];
+    let T_10 = row[3];
+    let T_02 = row[2];
+    let T_12 = row[5];
+
+    // derive from transformation matrix
+    let dx = T_02;
+    let dy = T_12;
+    let dyaw = T_10.atan2(T_00); // atan2(y, x);
+
+    Pose:: new(Point::new(dx, dy), dyaw)
+}
+
+
+
+#[allow(non_snake_case)]
+pub fn to_na_homogeneous(A: &PointCloud) -> na::DMatrix<f64> {
     let to_na_p2: fn(Point) -> na::Point2<f64> = |p: Point| na::Point2::new(p.x, p.y);
 
     let A_homo_vec: Vec<f64> = A
