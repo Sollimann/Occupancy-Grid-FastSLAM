@@ -7,6 +7,7 @@ use rayon::prelude::*;
 use crate::math::timer::Timer;
 use crate::scanmatching::icp::icp;
 use crate::pointcloud::PointCloud;
+use crate::geometry::Point;
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {

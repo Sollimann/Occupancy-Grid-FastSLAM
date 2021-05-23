@@ -3,6 +3,7 @@ use crate::gridmap::grid_map::GridMap;
 use crate::math::scalar::Scalar;
 use crate::sensor::laserscanner::Scan;
 use crate::pointcloud::PointCloud;
+use crate::geometry::Point;
 
 
 #[derive(Debug, Clone)]

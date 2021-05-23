@@ -169,10 +169,12 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
     let mut prev_err = 0.0;
     let mut mean_err = 0.0;
 
-    for _ in 0..max_iterations {
+    for i in 0..max_iterations {
 
         // get neighbor information
         let (distances, indices) = nearest_neighbor(&A_trans, &B);
+
+        println!("distances: {:?}", distances);
 
         // Homogeneous version of A
         let A_hom = to_na_homogeneous(&A_trans);
@@ -185,28 +187,19 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
             B_ordered.add(point);
         });
 
-        println!("A_hom_trans {}", B_ordered);
-
         // Get best transformation matrix for current pointclouds
         let (T_t, _, _) = best_fit_transform(&A_trans, &B_ordered);
-
-        println!("A_hom {}", A_hom);
 
         // Get transformed point cloud A
         let A_hom_trans: na::OMatrix<f64, Dynamic, U3> = (T_t * A_hom.transpose()).transpose();
         A_trans = from_na_homogeneous(&A_hom_trans);
 
-
-
-        println!("A_hom_trans {}", A_hom_trans);
-        println!("A_trans {}", A_trans);
-
         // compute mean error
         mean_err = distances.iter().sum::<f64>() / distances.len() as f64;
-        if abs(prev_err - mean_err) < tolerance || mean_err > prev_err {
+        if abs(prev_err - mean_err) < tolerance {
+            println!("meet threshold at iteration: {}", i);
             break;
         }
-        println!("mean err: {}", mean_err);
 
         // update prev error with current error
         prev_err = mean_err;
@@ -214,6 +207,8 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
 
     // Homogeneous transformation matrix
     let (T, _, _) = best_fit_transform(A, &A_trans);
+
+    println!("T: {}", T);
 
     return to_pose(T);
 }
@@ -224,7 +219,6 @@ fn from_na_homogeneous(A_hom: &na::OMatrix<f64, Dynamic, U3>) -> PointCloud {
     let A_trans = A_hom.clone().remove_column(2);
 
     A_trans.row_iter().for_each(|row| {
-        println!("row {}", row);
         let r: Vec<f64> = row.iter().map(|i| i.clone() as f64).collect();
         A.add(Point::new(r[0], r[1]));
     });
