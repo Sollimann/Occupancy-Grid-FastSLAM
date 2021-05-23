@@ -174,8 +174,6 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
         // get neighbor information
         let (distances, indices) = nearest_neighbor(&A_trans, &B);
 
-        println!("distances: {:?}", distances);
-
         // Homogeneous version of A
         let A_hom = to_na_homogeneous(&A_trans);
 
@@ -197,7 +195,6 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
         // compute mean error
         mean_err = distances.iter().sum::<f64>() / distances.len() as f64;
         if abs(prev_err - mean_err) < tolerance {
-            println!("meet threshold at iteration: {}", i);
             break;
         }
 
@@ -207,8 +204,6 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
 
     // Homogeneous transformation matrix
     let (T, _, _) = best_fit_transform(A, &A_trans);
-
-    println!("T: {}", T);
 
     return to_pose(T);
 }
