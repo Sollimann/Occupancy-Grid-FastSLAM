@@ -1,4 +1,5 @@
 use fastslam::sensor::noise::gaussian;
+use std::f64::consts::PI;
 
 #[test]
 fn test_gaussian_noise() {

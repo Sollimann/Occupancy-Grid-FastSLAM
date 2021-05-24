@@ -68,7 +68,7 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let motion_model_pose = Self::motion_model(&p.pose, &gain, dt);
+                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -82,7 +82,7 @@ impl ParticleFilter {
                 let scan_match_pose = motion_model_pose + pose_correction;
 
                 // step 3.)
-                // sample points around the pose x*_t (using nearest neighbor?)
+                // sample points around the pose x*_t
                 let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, 1.0, 10);
 
                 // step 4.)
