@@ -3,7 +3,7 @@ use crate::math::scalar::{Angle, Scalar};
 use std::{ops, cmp, fmt};
 use approx::{RelativeEq};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Pose {
     pub position: Point,
     pub heading: Angle,
@@ -53,10 +53,20 @@ impl ops::Mul<Scalar> for Pose {
     type Output = Pose;
 
     fn mul(self, s: Scalar) -> Self::Output {
-
         Pose::new(self.position * s, self.heading * s)
     }
 }
+
+
+/// overload Pose divided by Scalar
+impl ops::Div<Scalar> for Pose {
+    type Output = Pose;
+
+    fn div(self, s: Scalar) -> Self::Output {
+        Pose::new(self.position / s, self.heading / s)
+    }
+}
+
 
 impl Default for Pose {
     fn default() -> Pose {

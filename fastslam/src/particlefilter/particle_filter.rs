@@ -7,6 +7,7 @@ use crate::math::timer::Timer;
 use crate::scanmatching::icp::icp;
 use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
+use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
@@ -87,6 +88,14 @@ impl ParticleFilter {
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
                 // improved proposal distribution
+                Self::improved_proposal(
+                    pose_samples,
+                    &p.pose,
+                    &p.gridmap,
+                    &scan,
+                    &gain,
+                    dt
+                );
 
                 // step 5.)
                 // update the importance weights
@@ -118,15 +127,25 @@ impl ParticleFilter {
         samples
     }
 
-    fn improved_proposal(sampled_poses: Vec<Pose>) {
+    fn improved_proposal(
+        sampled_poses: Vec<Pose>,
+        prev_particle_pose: &Pose,
+        prev_gridmap: &GridMap,
+        scan: &Scan,
+        gain: &Twist,
+        dt: f64
+    ) {
+        let mut mu = Pose::default();
+        let mut eta = 0.0;
 
-    }
+        sampled_poses.into_iter().for_each(move |x_j: Pose| {
+            let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
+            let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
+            mu += x_j * p_z * p_x;
+            eta += p_z * p_x;
+        });
 
-    fn scan_matching(pose: Pose, scan: Scan, particle: Particle) {
-
-        // transform scan in polar coordinates to pointcloud in cartesian coordinates
-        let curr_pointcloud = scan.to_pointcloud(&pose);
-        let prev_pointcloud = particle.get_prev_observation();
-
+        mu = mu / eta; // normalizing the mean using normalization factor
+        let mut sigma = Pose::default();
     }
 }
