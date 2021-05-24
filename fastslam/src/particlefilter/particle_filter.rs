@@ -8,6 +8,8 @@ use crate::math::timer::Timer;
 use crate::scanmatching::icp::icp;
 use crate::pointcloud::PointCloud;
 use crate::geometry::Point;
+use crate::sensor::noise::gaussian;
+use std::alloc::Global;
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
@@ -65,11 +67,10 @@ impl ParticleFilter {
         self.particles
             .par_iter_mut()
             .for_each(|p: &mut Particle| {
-                p.weight = 2.0;
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let x_initial = Self::motion_model(&p.pose, &gain, dt);
+                let motion_model_pose = Self::motion_model(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -79,11 +80,12 @@ impl ParticleFilter {
                     p.prev_pointcloud = curr_pointcloud.clone();
                 }
 
-                let pose_dif = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.01);
-                p.pose = x_initial + pose_dif
+                let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
+                let scan_match_pose = motion_model_pose + pose_correction;
 
                 // step 3.)
                 // sample points around the pose x*_t (using nearest neighbor?)
+                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, 1.0, 10);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
@@ -91,9 +93,11 @@ impl ParticleFilter {
 
                 // step 5.)
                 // update the importance weights
+                p.weight = 2.0;
 
                 // step 6.)
                 // updating the map according to the drawn pose x_t and the observation z_t
+                p.gridmap.update(&p.pose, scan)
 
                 // step 7.)
                 // compute efficient number of particles and resample based on
@@ -102,6 +106,23 @@ impl ParticleFilter {
             });
 
         println!("particles: {:?} ", self.particles);
+    }
+
+    #[allow(non_snake_case)]
+    fn sample_distribution(scan_match_pose: &Pose, std_dev: f64, K: usize) -> Vec<Pose> {
+        let mut samples: Vec<Pose> = Vec::with_capacity(K);
+        for _ in 0..K {
+            let x = gaussian(scan_match_pose.position.x, std_dev);
+            let y = gaussian(scan_match_pose.position.y, std_dev);
+            let theta = scan_match_pose.heading;
+            let p = Pose::new(Point { x, y }, theta);
+            samples.push(p)
+        }
+        samples
+    }
+
+    fn improved_proposal() {
+
     }
 
     fn scan_matching(pose: Pose, scan: Scan, particle: Particle) {

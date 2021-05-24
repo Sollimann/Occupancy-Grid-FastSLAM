@@ -1,6 +1,6 @@
 use crate::odometry::{Pose, Twist};
 use crate::geometry::Point;
-use crate::simulator::noise::gaussian;
+use crate::sensor::noise::gaussian;
 use crate::math::scalar::PI;
 
 pub trait MotionModel {
