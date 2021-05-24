@@ -2,14 +2,11 @@ use crate::gridmap::grid_map::GridMap;
 use crate::odometry::{Pose, Twist, MotionModel};
 use crate::sensor::laserscanner::Scan;
 use crate::particlefilter::particle::Particle;
-//use rayon::iter::{IntoParallelRefMutIterator, IntoParallelIterator};
 use rayon::prelude::*;
 use crate::math::timer::Timer;
 use crate::scanmatching::icp::icp;
-use crate::pointcloud::PointCloud;
 use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
-use std::alloc::Global;
 
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
@@ -121,7 +118,7 @@ impl ParticleFilter {
         samples
     }
 
-    fn improved_proposal() {
+    fn improved_proposal(sampled_poses: Vec<Pose>) {
 
     }
 
