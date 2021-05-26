@@ -4,6 +4,7 @@ use crate::math::scalar::{Angle, Scalar};
 use crate::odometry::pose::Pose;
 use crate::pointcloud::PointCloud;
 use std::slice::Iter;
+use std::iter::FromIterator;
 
 /// A single measurement (distance reading) of a laser scanner.
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +30,19 @@ impl Measurement {
 #[derive(Debug, Clone)]
 pub struct Scan {
     pub measurements: Vec<Measurement>,
+}
+
+// needed to be able to iter().collect() on scans
+impl FromIterator<Measurement> for Scan {
+    fn from_iter<T: IntoIterator<Item=Measurement>>(iter: T) -> Self {
+        let mut scan = Scan::empty();
+
+        for meas in iter {
+            scan.add(meas)
+        }
+
+        scan
+    }
 }
 
 impl Scan {

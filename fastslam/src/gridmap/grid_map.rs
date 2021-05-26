@@ -58,6 +58,23 @@ impl GridMap {
         self.cells = vec![vec![CellState::Void; self.map_size]; self.map_size]
     }
 
+    pub fn get_all_occupied_cells(&self) -> Vec<Point> {
+        let mut occupied: Vec<Point> = vec![];
+        for (x, rows) in self.cells.iter().enumerate() {
+            for (y, _) in rows.iter().enumerate() {
+                match self.cell_state(x, y) {
+                    None => {}
+                    Some(cellstate) => {
+                        if (cellstate != &CellState::Freespace) && (cellstate != &CellState::Void) {
+                            occupied.push(Point::new(x as f64, y as f64));
+                        }
+                    }
+                }
+            }
+        }
+        return occupied
+    }
+
     pub fn update(&mut self, pose: &Pose, scan: &Scan) {
         use self::CellState::*;
         for &m in scan.iter() {
@@ -116,7 +133,7 @@ impl GridMap {
     }
 
     /// convert from continous world coordinates to map coordinates
-    fn world_to_map(&self, point: Point) -> Option<(usize, usize)> {
+    pub fn world_to_map(&self, point: Point) -> Option<(usize, usize)> {
         self.index_from_dist(point.x)
             .and_then(|x| self.index_from_dist(point.y).map(|y| (x, y)))
     }

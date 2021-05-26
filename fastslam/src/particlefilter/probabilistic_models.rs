@@ -1,14 +1,16 @@
 use crate::odometry::{Pose, Twist};
-use crate::sensor::laserscanner::Scan;
+use crate::sensor::laserscanner::{Scan, Measurement};
 use crate::gridmap::grid_map::GridMap;
 use crate::math::scalar::PI;
+use crate::geometry::Point;
 
 /// Computes the motion model probability of a sampled pose.
 /// This is the probability p(x_t | x_t-1, u_t) of being at pose x_t after executing
 /// control u_t beginning at state x_t-1 assuming that the control is carried out
 /// for the fixed duration of dt
 ///
-/// More details: p.123 Table 5.1 in probabilistic robotics, Sebastian Thrun et al.
+/// More info: 
+///  - p.123 Table 5.1 in probabilistic robotics, Sebastian Thrun et al.
 ///
 /// Input:
 ///     curr_particle_pose: the sampled pose after scan match correction
@@ -60,7 +62,10 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 /// This is the probability p(z_t | x_j, m_t-1) of measuring z_t and time t, where the robot pose
 /// is x_j (sampled pose after scan matching) and m_t-1 is the previous map of the environment
 ///
-/// More details: p.172 Table 6.3 in probabilistic robotics, Sebastian Thrun et al.
+/// More info:
+///  - p.172 Table 6.3 in probabilistic robotics, Sebastian Thrun et al.
+///  - https://calvinfeng.gitbook.io/probabilistic-robotics/basics/robot-perception/01-beam-models-of-range-finders
+///  - https://calvinfeng.gitbook.io/probabilistic-robotics/basics/robot-perception/02-likelihood-fields-for-range-finders
 ///
 /// Input:
 ///     scan: the latest scan
@@ -69,8 +74,39 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 /// Returns:
 ///     p: probability (0.0 - 1.0)
 pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose, prev_gridmap: &GridMap) -> f64 {
-    let q = 1.0;
-    q
+    let z_short = 0.1; // range: (0.1 - 0.3)
+    let z_hit = 1.0 - z_short; // range: (0.6-0.9)
+    let z_max = 30.0; // maximum allowed sensor value
+    let z_rand = 0.05; // random distance noise
+    let sigma_hit: f64 = 0.03; //
+    let mut q = 1.0;
+
+    // filter out readings equal to or larger than max laser range
+    let filtered_scan: Scan = scan
+        .iter()
+        .filter(|&meas| meas.distance < z_max)
+        .cloned()
+        .collect();
+
+    // collect all occupied cells in gridmap
+    let occupied_cells = prev_gridmap.get_all_occupied_cells();
+
+    // the Euclidean distance between the measurement coordinates (x_z, y_z)
+    // and the nearest object in the map m
+    filtered_scan.to_pointcloud(curr_sampled_pose).iter().for_each(|z: &Point|{
+        let mut min_dist = 9999.0;
+
+        occupied_cells.iter().for_each(|o| {
+            let dist = o.to_point_vec(*z).length();
+            if dist < min_dist {
+                min_dist = dist
+            }
+        });
+
+        q = q * (z_hit * prob_normal_distribution(min_dist, sigma_hit.powi(2)) + z_rand / z_max)
+    });
+
+    return q
 }
 
 fn prob_normal_distribution(a: f64, b_squared: f64) -> f64 {
