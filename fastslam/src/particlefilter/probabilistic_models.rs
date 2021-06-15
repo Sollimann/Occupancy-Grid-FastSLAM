@@ -66,6 +66,10 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 ///  - p.172 Table 6.3 in probabilistic robotics, Sebastian Thrun et al.
 ///  - https://calvinfeng.gitbook.io/probabilistic-robotics/basics/robot-perception/01-beam-models-of-range-finders
 ///  - https://calvinfeng.gitbook.io/probabilistic-robotics/basics/robot-perception/02-likelihood-fields-for-range-finders
+///  - https://www.programmersought.com/article/92314093249/
+///
+/// the values measured by the range sensor are limited to the
+/// interval [0; z_max ], where z_max denotes the maximum sensor range
 ///
 /// Input:
 ///     scan: the latest scan
@@ -74,11 +78,11 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 /// Returns:
 ///     p: probability (0.0 - 1.0)
 pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose, prev_gridmap: &GridMap) -> f64 {
-    let z_short = 0.1; // range: (0.1 - 0.3)
-    let z_hit = 1.0 - z_short; // range: (0.6-0.9)
+    // intrinsic parameters
+    let z_hit = 0.95; // range: (0.6-0.9)
     let z_max = 30.0; // maximum allowed sensor value
-    let z_rand = 0.05; // random distance noise
-    let sigma_hit: f64 = 0.03; //
+    let z_rand = 1.0 - z_hit; // random distance noise
+    let sigma_hit: f64 = 0.2; // [m] used in the z_hit part of the model.
     let mut q = 1.0;
 
     // filter out readings equal to or larger than max laser range
@@ -93,11 +97,20 @@ pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose
 
     // the Euclidean distance between the measurement coordinates (x_z, y_z)
     // and the nearest object in the map m
-    filtered_scan.to_pointcloud(curr_sampled_pose).iter().for_each(|z: &Point|{
+    filtered_scan.to_pointcloud(curr_sampled_pose)
+        .iter()
+        .for_each(|z_world: &Point|{
         let mut min_dist = 9999.0;
 
-        occupied_cells.iter().for_each(|o| {
-            let dist = o.to_point_vec(*z).length();
+        let z_map = match prev_gridmap.world_to_map(*z_world) {
+            Some((x,y)) => Point::new(x as f64, y as f64),
+            _ => panic!("Could not convert point to map coordinates!")
+        };
+
+        // is the occupied cell in grid map coordinates??
+        occupied_cells.iter().for_each(|occupied_cell| {
+            // distance to the nearest obstacle in x-y-space is computed
+            let dist = occupied_cell.to_point_vec(z_map).length();
             if dist < min_dist {
                 min_dist = dist
             }
@@ -109,6 +122,18 @@ pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose
     return q
 }
 
+/// Computes the probability of its argument 'a' under a zero-centered (x - mu = x - 0.0 = x)
+/// with variance 'b^2'.    assert!(prob >= 0.0 && prob <= 1.0);
+
+///
+/// More info:
+///  - p.123 Table 5.2 in probabilistic robotics, Sebastian Thrun et al.
+///
+/// Input:
+///     a: argument (i.e distance)
+///     b_squared: variance
+/// Returns:
+///     p: probability (0.0 - 1.0)
 fn prob_normal_distribution(a: f64, b_squared: f64) -> f64 {
-    (1.0 / (2.0 * PI * b_squared).sqrt()) * (-0.5 * a.powi(2) / b_squared).exp()
+    return (1.0 / (2.0 * PI * b_squared).sqrt()) * (-0.5 * a.powi(2) / b_squared).exp();
 }

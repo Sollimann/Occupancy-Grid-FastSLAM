@@ -131,7 +131,6 @@ impl GridMap {
             Some(c as usize)
         }
     }
-
     /// convert from continous world coordinates to map coordinates
     pub fn world_to_map(&self, point: Point) -> Option<(usize, usize)> {
         self.index_from_dist(point.x)
