@@ -18,7 +18,7 @@ use crate::geometry::Point;
 ///     gain: most recent control input
 ///     dt: duration of the control gain
 /// Returns:
-///     p: probability (0.0 - 1.0)
+///     p: probability (0.0 - 1.0+) does not need to be between 0-1
 pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose, gain: &Twist, dt: f64) -> f64 {
     // motion noise params
     // alpha_1:2: angular error
@@ -37,10 +37,9 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
     let theta = prev_particle_pose.heading;
 
     // compute mu
-    let mu = 0.5 *
-        ((x - x_prime) * theta.cos() + (y - y_prime) * theta.sin()) /
-        ((y - y_prime) * theta.cos() - (x - x_prime) * theta.sin());
-
+    let top = (x - x_prime) * theta.cos() + (y - y_prime) * theta.sin();
+    let bottom = (y - y_prime) * theta.cos() - (x - x_prime) * theta.sin();
+    let mu = 0.5 * top / bottom;
 
     let x_star = (x + x_prime) / 2.0 + mu*(y - y_prime);
     let y_star = (y + y_prime) / 2.0 + mu*(x_prime - x);
@@ -76,7 +75,7 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 ///     curr_sampled_pose: the sampled pose after scan match correction
 ///     prev_gridmap: the latest gridmap estimate for the particle
 /// Returns:
-///     p: probability (0.0 - 1.0)
+///     q: probability (0.0 - 1.0+) does not need to be between 0-1
 pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose, prev_gridmap: &GridMap) -> f64 {
     // intrinsic parameters
     let z_hit = 0.95; // range: (0.6-0.9)
@@ -99,7 +98,7 @@ pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose
     // and the nearest object in the map m
     filtered_scan.to_pointcloud(curr_sampled_pose)
         .iter()
-        .for_each(|z_world: &Point|{
+        .for_each(|z_world: &Point| {
         let mut min_dist = 9999.0;
 
         let z_map = match prev_gridmap.world_to_map(*z_world) {
@@ -133,7 +132,7 @@ pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose
 ///     a: argument (i.e distance)
 ///     b_squared: variance
 /// Returns:
-///     p: probability (0.0 - 1.0)
+///     p: probability (0.0 - 1.0+) does not need to be between 0-1
 fn prob_normal_distribution(a: f64, b_squared: f64) -> f64 {
     return (1.0 / (2.0 * PI * b_squared).sqrt()) * (-0.5 * a.powi(2) / b_squared).exp();
 }

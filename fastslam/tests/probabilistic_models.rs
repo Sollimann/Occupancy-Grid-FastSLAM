@@ -1,9 +1,9 @@
-use fastslam::particlefilter::probabilistic_models::likelihood_field_range_finder_model;
+use fastslam::particlefilter::probabilistic_models::{likelihood_field_range_finder_model, motion_model_velocity};
 use fastslam::sensor::laserscanner::{Scan, Measurement};
 use fastslam::math::scalar::PI;
-use fastslam::odometry::Pose;
+use fastslam::odometry::{Pose, Twist};
 use fastslam::gridmap::grid_map::GridMap;
-use fastslam::geometry::Point;
+use fastslam::geometry::{Point, Vector};
 
 #[test]
 fn test_likelihood_range_finder_empty_map_zero_prob() {
@@ -113,7 +113,7 @@ fn test_likelihood_range_finder_same_scan_twice() {
 
     pose = Pose {
         position: Point { x: 29.0, y: 29.0 },
-        heading: PI
+        heading: 0.0
     };
 
     meas = vec![
@@ -135,4 +135,33 @@ fn test_likelihood_range_finder_same_scan_twice() {
 
     let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
     assert!(prob > 0.0)
+}
+
+#[test]
+fn test_motion_model_velocity() {
+
+    let prev_pose = Pose::new(Point::new(0.0, 0.0), 0.0);
+    let prev_gain = Twist::new(Vector::new(1.0, 0.0), 0.0);
+    let curr_pose = Pose::new(Point::new(1.0001, 0.001), 0.0001);
+
+    let prob_sample_overcompensated = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        0.8);
+
+    let prob_sample_accurate = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        0.98);
+
+    let prob_sample_undercompensated = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        1.2);
+
+    assert!(prob_sample_accurate > prob_sample_undercompensated);
+    assert!(prob_sample_undercompensated > prob_sample_overcompensated);
 }
