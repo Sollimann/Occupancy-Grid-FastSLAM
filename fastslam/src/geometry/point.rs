@@ -4,7 +4,7 @@ use std::ops;
 
 use crate::math::scalar::{Scalar, Angle};
 use crate::geometry::vector::Vector;
-use std::ops::{Add, Div};
+use std::ops::{Add, Div, Mul};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
@@ -68,6 +68,15 @@ impl ops::Mul<Scalar> for Point {
 
     fn mul(self, s: Scalar) -> Self::Output {
         Point::new(self.x * s, self.y * s)
+    }
+}
+
+/// overload Point multiplied by Point
+impl ops::Mul<Point> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        Point::new(self.x * rhs.x, self.y * rhs.y)
     }
 }
 

@@ -2,6 +2,7 @@ use crate::geometry::point::Point;
 use crate::math::scalar::{Angle, Scalar};
 use std::{ops, cmp, fmt};
 use approx::{RelativeEq};
+use std::ops::{Sub, Mul};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {
@@ -16,13 +17,35 @@ impl fmt::Display for Pose {
     }
 }
 
-/// overload Vector addition
+/// overload Pose addition
 impl ops::Add for Pose {
     type Output = Pose;
 
     fn add(self, rhs: Self) -> Self::Output {
         let position = self.position + rhs.position;
         let heading = self.heading + rhs.heading;
+        Pose::new(position, heading)
+    }
+}
+
+/// overload Pose subtraction
+impl ops::Sub for Pose {
+    type Output = Pose;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let position = self.position - rhs.position;
+        let heading = self.heading - rhs.heading;
+        Pose::new(position, heading)
+    }
+}
+
+/// overload Pose multiplication
+impl ops::Mul for Pose {
+    type Output = Pose;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let position = self.position * rhs.position;
+        let heading = self.heading * rhs.heading;
         Pose::new(position, heading)
     }
 }
@@ -77,5 +100,12 @@ impl Default for Pose {
 impl Pose {
     pub fn new(position: Point, heading: Angle) -> Pose {
         Pose { position, heading }
+    }
+    
+    pub fn sqrt(&self) -> Pose {
+        let x_sqrt = self.position.x.sqrt();
+        let y_sqrt = self.position.y.sqrt();
+        let heading_sqrt = self.heading.sqrt();
+        Pose::new(Point::new(x_sqrt, y_sqrt), heading_sqrt)
     }
 }

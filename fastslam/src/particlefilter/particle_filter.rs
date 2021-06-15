@@ -9,6 +9,8 @@ use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
 use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
 
+
+
 #[derive(Clone, Debug)]
 pub struct ParticleFilter {
     simulation: bool,
@@ -83,13 +85,14 @@ impl ParticleFilter {
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, 1.0, 10);
+                let std_dev_sampling = Pose::new(Point::new(1.0, 1.0), 0.05);
+                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 10);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
                 // improved proposal distribution
-                Self::improved_proposal(
-                    pose_samples,
+                let (improved_pose, eta) = Self::improved_proposal(
+                    &pose_samples,
                     &p.pose,
                     &p.gridmap,
                     &scan,
@@ -99,7 +102,7 @@ impl ParticleFilter {
 
                 // step 5.)
                 // update the importance weights
-                p.weight = 2.0;
+                p.weight = p.weight * eta;
 
                 // step 6.)
                 // updating the map according to the drawn pose x_t and the observation z_t
@@ -115,12 +118,12 @@ impl ParticleFilter {
     }
 
     #[allow(non_snake_case)]
-    fn sample_distribution(scan_match_pose: &Pose, std_dev: f64, K: usize) -> Vec<Pose> {
+    fn sample_distribution(mean: &Pose, std_dev: Pose, K: usize) -> Vec<Pose> {
         let mut samples: Vec<Pose> = Vec::with_capacity(K);
         for _ in 0..K {
-            let x = gaussian(scan_match_pose.position.x, std_dev);
-            let y = gaussian(scan_match_pose.position.y, std_dev);
-            let theta = scan_match_pose.heading;
+            let x = gaussian(mean.position.x, std_dev.position.x);
+            let y = gaussian(mean.position.y, std_dev.position.y);
+            let theta = gaussian(mean.heading, std_dev.heading);
             let p = Pose::new(Point { x, y }, theta);
             samples.push(p)
         }
@@ -128,24 +131,54 @@ impl ParticleFilter {
     }
 
     fn improved_proposal(
-        sampled_poses: Vec<Pose>,
+        sampled_poses: &Vec<Pose>,
         prev_particle_pose: &Pose,
         prev_gridmap: &GridMap,
         scan: &Scan,
         gain: &Twist,
         dt: f64
-    ) {
+    ) -> (Pose, f64) {
+        // types are defined at compile-time, so this should not cause overhead
+        struct PoseWithDistribution {
+            pub pose: Pose,
+            pub p_z: f64,
+            pub p_x: f64
+        }
+
         let mut mu = Pose::default();
         let mut eta = 0.0;
 
-        sampled_poses.into_iter().for_each(move |x_j: Pose| {
+        let mut poses_with_distribution: Vec<PoseWithDistribution> = vec![];
+
+        sampled_poses.into_iter().for_each(|x_j: &Pose| {
             let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
             let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
-            mu += x_j * p_z * p_x;
+            mu += *x_j * p_z * p_x;
             eta += p_z * p_x;
+
+            // to avoid re-computing, keep a cache
+            poses_with_distribution.push(PoseWithDistribution { pose: *x_j, p_z, p_x });
         });
 
-        mu = mu / eta; // normalizing the mean using normalization factor
-        let mut sigma = Pose::default();
+        // get final estimate of mean pose by normalizing the mean using normalization factor
+        mu = mu / eta;
+
+        let mut sigma = Pose::default(); // (0,0,0)
+
+        poses_with_distribution.into_iter().for_each(|pwd: PoseWithDistribution| {
+            let (x_j, p_z, p_x) = (pwd.pose, pwd.p_z, pwd.p_x);
+            sigma = sigma + (x_j - mu) * (x_j - mu) * p_z * p_x;
+        });
+
+        // get final estimate of sigma (pose variance)
+        sigma = sigma / eta;
+
+        // sample final particle pose
+        let improved_pose = match Self::sample_distribution(&mu, sigma.sqrt(), 1).first() {
+            None => panic!("could not sample new pose!"),
+            Some(p) => *p
+        };
+
+        return (improved_pose, eta)
     }
 }
