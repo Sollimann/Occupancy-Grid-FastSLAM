@@ -48,6 +48,7 @@ impl Default for ParticleFilter {
 
 impl MotionModel for ParticleFilter {}
 
+#[allow(non_snake_case)]
 impl ParticleFilter {
 
     /// particles: S_t-1 - the sample set of the previous step
@@ -100,21 +101,36 @@ impl ParticleFilter {
                     dt
                 );
 
-                // step 5.)
-                // update the importance weights
+                // step 5 & 6.)
+                // update the importance weights, pose and map for particle
                 p.weight = p.weight * eta;
-
-                // step 6.)
-                // updating the map according to the drawn pose x_t and the observation z_t
-                p.gridmap.update(&p.pose, scan)
-
-                // step 7.)
-                // compute efficient number of particles and resample based on
-                // computed weights if Neff drops below threshold
-
+                p.gridmap.update(&improved_pose, scan); // updating the map according to the drawn pose x_t and the observation z_t
+                p.pose = improved_pose;
             });
 
+        // step 7.)
+        // compute efficient number of particles and resample based on
+        // computed weights if Neff drops below threshold
+        let Neff = Self::compute_neff(&self.particles);
+
+        if Neff < (*&self.particles.len() as f64) / 2.0 {
+            self.resample()
+        }
+
         println!("particles: {:?} ", self.particles);
+    }
+
+    fn resample(&mut self) {
+        unimplemented!("todo")
+    }
+
+    pub fn compute_neff(particles: &Vec<Particle>) -> f64 {
+        let squared_sum = particles
+            .iter()
+            .map(|p| p.weight)
+            .fold(0.0, |sum, w| sum + w);
+
+        return 1.0 / squared_sum
     }
 
     #[allow(non_snake_case)]
