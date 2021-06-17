@@ -128,7 +128,7 @@ impl ParticleFilter {
         let squared_sum = particles
             .iter()
             .map(|p| p.weight)
-            .fold(0.0, |sum, w| sum + w);
+            .fold(0.0, |sum, w| sum + w.powi(2));
 
         return 1.0 / squared_sum
     }
