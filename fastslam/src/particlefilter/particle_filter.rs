@@ -145,11 +145,12 @@ impl ParticleFilter {
             pub p_x: f64
         }
 
-        let mut mu = Pose::default();
+        let mut mu = Pose::default(); // (0,0,0)
         let mut eta = 0.0;
 
         let mut poses_with_distribution: Vec<PoseWithDistribution> = vec![];
 
+        // TODO: Run this in parallel
         sampled_poses.into_iter().for_each(|x_j: &Pose| {
             let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
             let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);

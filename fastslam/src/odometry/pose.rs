@@ -39,7 +39,7 @@ impl ops::Sub for Pose {
     }
 }
 
-/// overload Pose multiplication
+/// overload Pose and Pose multiplication
 impl ops::Mul for Pose {
     type Output = Pose;
 
@@ -101,7 +101,8 @@ impl Pose {
     pub fn new(position: Point, heading: Angle) -> Pose {
         Pose { position, heading }
     }
-    
+
+    // TODO: Write a test to see if this works
     pub fn sqrt(&self) -> Pose {
         let x_sqrt = self.position.x.sqrt();
         let y_sqrt = self.position.y.sqrt();

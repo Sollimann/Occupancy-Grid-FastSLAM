@@ -28,60 +28,8 @@ fn test_likelihood_range_finder_empty_map_zero_prob() {
 
     let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
 
-    assert!(prob >= 0.0)
-}
-
-#[test]
-fn test_likelihood_range_finder() {
-    let mut grid = GridMap::new(100, 1.0);
-
-    let mut pose = Pose {
-        position: Point { x: 29.0, y: 29.0 },
-        heading: 0.0
-    };
-
-    let mut meas = vec![
-        Measurement { angle: 0.0, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.1, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.2, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.3, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.4, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.5, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.6, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.7, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.8, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.9, distance: 10.0 },
-        Measurement { angle: -PI/2.0, distance: 10.0 },
-    ];
-
-    let mut scan = Scan { measurements: meas,  };
-    grid.update(&pose, &mut scan);
-    let old_grid_map = grid.clone();
-
-    pose = Pose {
-        position: Point { x: 30.0, y: 30.0 },
-        heading: 0.0
-    };
-
-    meas = vec![
-        Measurement { angle: 0.0, distance: 10.0 },
-        Measurement { angle: -PI/2.0 * 0.1, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.2, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.3, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.4, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.5, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.6, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.7, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.8, distance: 9.5 },
-        Measurement { angle: -PI/2.0 * 0.9, distance: 9.5 },
-        Measurement { angle: -PI/2.0, distance: 9.5 },
-    ];
-    scan = Scan { measurements: meas};
-    grid.update(&pose, &mut scan);
-
-    let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
-
-    assert!(prob > 0.0)
+    // probability of detecting an empty world given a previous map m_t-1 should be 0.0
+    assert_eq!(prob, 0.0)
 }
 
 #[test]
@@ -134,7 +82,124 @@ fn test_likelihood_range_finder_same_scan_twice() {
     grid.update(&pose, &mut scan);
 
     let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
-    assert!(prob > 0.0)
+
+    // If the robot does not move from t to t+1, the probability of measuring the same map twice
+    // should be really high
+    assert!(prob > 1000.0)
+}
+
+#[test]
+fn test_likelihood_range_finder_unlikely_second_scan() {
+    let mut grid = GridMap::new(100, 1.0);
+
+    let mut pose = Pose {
+        position: Point { x: 29.0, y: 0.0 },
+        heading: 0.0
+    };
+
+    let mut meas = vec![
+        Measurement { angle: 0.1, distance: 10.0 },
+        Measurement { angle: 0.2, distance: 10.0 },
+        Measurement { angle: 0.3, distance: 10.0 },
+        Measurement { angle: 0.4, distance: 10.0 },
+        Measurement { angle: 0.5, distance: 10.0 },
+        Measurement { angle: 0.0, distance: 10.0 },
+        Measurement { angle: -0.1, distance: 10.0 },
+        Measurement { angle: -0.2, distance: 10.0 },
+        Measurement { angle: -0.3, distance: 10.0 },
+        Measurement { angle: -0.4, distance: 10.0 },
+        Measurement { angle: -0.5, distance: 10.0 },
+    ];
+
+    let mut scan = Scan { measurements: meas,  };
+    grid.update(&pose, &mut scan);
+    let old_grid_map = grid.clone();
+
+    pose = Pose {
+        position: Point { x: 30.0, y: 0.0 },
+        heading: 0.0
+    };
+
+    let mut meas = vec![
+        Measurement { angle: 0.1, distance: 11.0 },
+        Measurement { angle: 0.2, distance: 11.0 },
+        Measurement { angle: 0.3, distance: 11.0 },
+        Measurement { angle: 0.4, distance: 11.0 },
+        Measurement { angle: 0.5, distance: 11.0 },
+        Measurement { angle: 0.0, distance: 11.0 },
+        Measurement { angle: -0.1, distance: 11.0 },
+        Measurement { angle: -0.2, distance: 11.0 },
+        Measurement { angle: -0.3, distance: 11.0 },
+        Measurement { angle: -0.4, distance: 11.0 },
+        Measurement { angle: -0.5, distance: 11.0 },
+    ];
+
+    scan = Scan { measurements: meas};
+    grid.update(&pose, &mut scan);
+
+    let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
+
+    // if you measure a wall a some distance and drive forward in that direction, then in t+1 the probability of
+    // measuring a wall further away in the same direction is very unlikely and should produce
+    // a low probability distribution
+    assert!(prob > 0.0 && prob < 0.00001)
+}
+
+#[test]
+fn test_likelihood_range_finder_likely_second_scan() {
+    let mut grid = GridMap::new(100, 1.0);
+
+    let mut pose = Pose {
+        position: Point { x: 29.0, y: 0.0 },
+        heading: 0.0
+    };
+
+    let mut meas = vec![
+        Measurement { angle: 0.1, distance: 10.0 },
+        Measurement { angle: 0.2, distance: 10.0 },
+        Measurement { angle: 0.3, distance: 10.0 },
+        Measurement { angle: 0.4, distance: 10.0 },
+        Measurement { angle: 0.5, distance: 10.0 },
+        Measurement { angle: 0.0, distance: 10.0 },
+        Measurement { angle: -0.1, distance: 10.0 },
+        Measurement { angle: -0.2, distance: 10.0 },
+        Measurement { angle: -0.3, distance: 10.0 },
+        Measurement { angle: -0.4, distance: 10.0 },
+        Measurement { angle: -0.5, distance: 10.0 },
+    ];
+
+    let mut scan = Scan { measurements: meas,  };
+    grid.update(&pose, &mut scan);
+    let old_grid_map = grid.clone();
+
+    pose = Pose {
+        position: Point { x: 30.0, y: 0.0 },
+        heading: 0.0
+    };
+
+    let mut meas = vec![
+        Measurement { angle: 0.1, distance: 9.0 },
+        Measurement { angle: 0.2, distance: 9.0 },
+        Measurement { angle: 0.3, distance: 9.0 },
+        Measurement { angle: 0.4, distance: 9.0 },
+        Measurement { angle: 0.5, distance: 9.0 },
+        Measurement { angle: 0.0, distance: 9.0 },
+        Measurement { angle: -0.1, distance: 9.0 },
+        Measurement { angle: -0.2, distance: 9.0 },
+        Measurement { angle: -0.3, distance: 9.0 },
+        Measurement { angle: -0.4, distance: 9.0 },
+        Measurement { angle: -0.5, distance: 9.0 },
+    ];
+
+    scan = Scan { measurements: meas};
+    grid.update(&pose, &mut scan);
+
+    let prob = likelihood_field_range_finder_model(&scan, &pose, &old_grid_map);
+
+    // if you measure a wall a some distance and drive forward in that direction, then in t+1 the probability of
+    // measuring a wall closer than in the last step in the same direction is very likely and should produce
+    // a low probability distribution
+    assert!(prob > 1000.0)
 }
 
 #[test]
