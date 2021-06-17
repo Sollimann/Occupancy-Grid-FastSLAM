@@ -8,7 +8,7 @@ use crate::scanmatching::icp::icp;
 use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
 use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
-
+use crate::particlefilter::resampling::low_variance_sampler;
 
 
 #[derive(Clone, Debug)]
@@ -114,14 +114,11 @@ impl ParticleFilter {
         let Neff = Self::compute_neff(&self.particles);
 
         if Neff < (*&self.particles.len() as f64) / 2.0 {
-            self.resample()
+            let resampled_particles = low_variance_sampler(&self.particles);
+            self.particles = resampled_particles;
         }
 
         println!("particles: {:?} ", self.particles);
-    }
-
-    fn resample(&mut self) {
-        unimplemented!("todo")
     }
 
     pub fn compute_neff(particles: &Vec<Particle>) -> f64 {
