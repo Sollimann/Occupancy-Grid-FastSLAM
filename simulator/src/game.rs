@@ -8,7 +8,7 @@ use graphics::{Transformed};
 use piston::UpdateArgs;
 use fastslam::simulator::Direction;
 use fastslam::odometry::Pose;
-use fastslam::simulator::noise::{Noise, gaussian};
+use fastslam::sensor::noise::{Noise, gaussian};
 use fastslam::geometry::Point;
 use fastslam::particlefilter::particle::Particle;
 

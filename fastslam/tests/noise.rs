@@ -1,7 +1,8 @@
-use fastslam::simulator::noise::gaussian;
+use fastslam::sensor::noise::gaussian;
+use std::f64::consts::PI;
 
 #[test]
 fn test_gaussian_noise() {
-    let v = gaussian(0.5, 0.05);
-    println!("{} is from a N(2, 9) distribution", v)
+    let v = gaussian(30.0, 1.0);
+    println!("v: {}", v)
 }

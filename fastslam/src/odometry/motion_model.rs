@@ -1,6 +1,6 @@
 use crate::odometry::{Pose, Twist};
 use crate::geometry::Point;
-use crate::simulator::noise::gaussian;
+use crate::sensor::noise::gaussian;
 use crate::math::scalar::PI;
 
 pub trait MotionModel {
@@ -17,7 +17,7 @@ pub trait MotionModel {
         angle
     }
 
-    fn motion_model(pose: &Pose, gain: &Twist, dt: f64) -> Pose {
+    fn sample_motion_model_velocity(pose: &Pose, gain: &Twist, dt: f64) -> Pose {
         let mut ds = gain.velocity.x * dt;
         let mut dyaw = gain.angular * dt;
 
