@@ -23,6 +23,8 @@ use crate::particlefilter::particle::Particle;
 #[allow(non_snake_case)]
 pub fn low_variance_sampler(particles: &Vec<Particle>) -> Vec<Particle> {
 
+    assert!(particles.len() > 0);
+
     let M = particles.len() as i64;
     let M_inv = 1.0 / (M as f64);
     let mut resampled_particles: Vec<Particle> = vec![];
@@ -34,6 +36,11 @@ pub fn low_variance_sampler(particles: &Vec<Particle>) -> Vec<Particle> {
         let U = r + ((m as f64) - 1.0) * M_inv;
         while U > c {
             i += 1;
+
+            if i as i64 >= M {
+                panic!("trying to access particle that is out of bounds")
+            }
+
             let w_i = particles.get(i).unwrap().weight;
             c += w_i;
         }
