@@ -8,10 +8,10 @@ use crate::scanmatching::icp::icp;
 use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
 use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
+use crate::particlefilter::resampling::low_variance_sampler;
 
 
-
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ParticleFilter {
     simulation: bool,
     timer: Timer,
@@ -48,12 +48,13 @@ impl Default for ParticleFilter {
 
 impl MotionModel for ParticleFilter {}
 
+#[allow(non_snake_case)]
 impl ParticleFilter {
 
     /// particles: S_t-1 - the sample set of the previous step
     /// scan: z_t - the most recent laser scan
     /// gain: u_t-1 - the most recent gain, applied in the previous step
-    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) {
+    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) -> Particle {
 
         let dt = if self.simulation {
             1.0 // 1.0s runs nicely with the simulator
@@ -100,21 +101,47 @@ impl ParticleFilter {
                     dt
                 );
 
-                // step 5.)
-                // update the importance weights
+                // step 5 & 6.)
+                // update the importance weights, pose and map for particle
                 p.weight = p.weight * eta;
-
-                // step 6.)
-                // updating the map according to the drawn pose x_t and the observation z_t
-                p.gridmap.update(&p.pose, scan)
-
-                // step 7.)
-                // compute efficient number of particles and resample based on
-                // computed weights if Neff drops below threshold
-
+                p.gridmap.update(&improved_pose, scan); // updating the map according to the drawn pose x_t and the observation z_t
+                p.pose = improved_pose;
             });
 
-        println!("particles: {:?} ", self.particles);
+        // Get highest weight particle before resampling
+        let best_estimate: Particle = Self::get_highest_weight_particle(&self.particles);
+
+        // step 7.)
+        // compute efficient number of particles and resample based on
+        // computed weights if Neff drops below threshold
+        let Neff = Self::compute_neff(&self.particles);
+
+        // TODO: do not perform resampling if robot hasn't moved since last step
+        // could check if gain = 0.0
+        if Neff < (*&self.particles.len() as f64) / 2.0 {
+            let resampled_particles = low_variance_sampler(&self.particles);
+            self.particles = resampled_particles;
+        }
+
+        return best_estimate
+    }
+
+    pub fn compute_neff(particles: &Vec<Particle>) -> f64 {
+        let squared_sum = particles
+            .iter()
+            .map(|p| p.weight)
+            .fold(0.0, |sum, w| sum + w.powi(2));
+
+        return 1.0 / squared_sum
+    }
+
+    fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
+        return particles
+            .iter()
+            .map(|p| (p.weight, p.clone()) )
+            .into_iter()
+            .max_by(|x, y| x.0.partial_cmp(&y.0).unwrap())
+            .unwrap().1
     }
 
     #[allow(non_snake_case)]
