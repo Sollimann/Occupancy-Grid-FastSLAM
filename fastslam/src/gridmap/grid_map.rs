@@ -19,7 +19,7 @@ impl Default for CellState {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GridMap {
     pub map_size: usize, // assuming quadratic map, with (0,0) in the middle
     pub cells: Vec<Vec<CellState>>,
@@ -29,7 +29,13 @@ pub struct GridMap {
 /// decide how a Point should be displayed when formatting and printing
 impl fmt::Display for GridMap {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "grid: {:?}", self.cells)
+        write!(f, "grid map size: x_dir: {}, y_dir: {}", self.map_size, self.map_size)
+    }
+}
+
+impl fmt::Debug for GridMap {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "grid map size: x_dir: {}, y_dir: {}", self.map_size, self.map_size)
     }
 }
 

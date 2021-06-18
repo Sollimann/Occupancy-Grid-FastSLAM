@@ -3,10 +3,10 @@ use crate::gridmap::grid_map::GridMap;
 use crate::math::scalar::Scalar;
 use crate::sensor::laserscanner::Scan;
 use crate::pointcloud::PointCloud;
-use crate::geometry::Point;
+use std::fmt;
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Particle {
     pub prev_pointcloud: PointCloud,
     pub pose: Pose, // particle's pose (x, y, theta)
@@ -23,6 +23,13 @@ impl Default for Particle {
             weight: 1.0,
             gridmap: GridMap::default()
         }
+    }
+}
+
+/// decide how a Point should be displayed when formatting and printing
+impl fmt::Debug for Particle {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Particle -> weight: {}, pose: {}, map: {} \n", self.weight, self.pose, self.gridmap)
     }
 }
 

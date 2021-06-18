@@ -11,7 +11,7 @@ use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelih
 use crate::particlefilter::resampling::low_variance_sampler;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ParticleFilter {
     simulation: bool,
     timer: Timer,
@@ -54,7 +54,7 @@ impl ParticleFilter {
     /// particles: S_t-1 - the sample set of the previous step
     /// scan: z_t - the most recent laser scan
     /// gain: u_t-1 - the most recent gain, applied in the previous step
-    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) {
+    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) -> Particle {
 
         let dt = if self.simulation {
             1.0 // 1.0s runs nicely with the simulator
@@ -108,17 +108,22 @@ impl ParticleFilter {
                 p.pose = improved_pose;
             });
 
+        // Get highest weight particle before resampling
+        let best_estimate: Particle = Self::get_highest_weight_particle(&self.particles);
+
         // step 7.)
         // compute efficient number of particles and resample based on
         // computed weights if Neff drops below threshold
         let Neff = Self::compute_neff(&self.particles);
 
+        // TODO: do not perform resampling if robot hasn't moved since last step
+        // could check if gain = 0.0
         if Neff < (*&self.particles.len() as f64) / 2.0 {
             let resampled_particles = low_variance_sampler(&self.particles);
             self.particles = resampled_particles;
         }
 
-        println!("particles: {:?} ", self.particles);
+        return best_estimate
     }
 
     pub fn compute_neff(particles: &Vec<Particle>) -> f64 {
@@ -128,6 +133,15 @@ impl ParticleFilter {
             .fold(0.0, |sum, w| sum + w.powi(2));
 
         return 1.0 / squared_sum
+    }
+
+    fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
+        return particles
+            .iter()
+            .map(|p| (p.weight, p.clone()) )
+            .into_iter()
+            .max_by(|x, y| x.0.partial_cmp(&y.0).unwrap())
+            .unwrap().1
     }
 
     #[allow(non_snake_case)]

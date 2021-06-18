@@ -24,15 +24,15 @@ use crate::particlefilter::particle::Particle;
 pub fn low_variance_sampler(particles: &Vec<Particle>) -> Vec<Particle> {
 
     assert!(particles.len() > 0);
+    let mut resampled_particles: Vec<Particle> = vec![];
 
     let M = particles.len() as i64;
     let M_inv = 1.0 / (M as f64);
-    let mut resampled_particles: Vec<Particle> = vec![];
     let r: f64 = rand::thread_rng().gen_range(0.0..M_inv);
     let mut c: f64 = particles.first().unwrap().weight;
     let mut i: usize = 1;
 
-    for m in 1..M {
+    for m in 0..M {
         let U = r + ((m as f64) - 1.0) * M_inv;
         while U > c {
             i += 1;
