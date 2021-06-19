@@ -11,6 +11,7 @@ use fastslam::odometry::Pose;
 use fastslam::sensor::noise::{Noise, gaussian};
 use fastslam::geometry::Point;
 use fastslam::particlefilter::particle::Particle;
+use fastslam::particlefilter::particle_filter::ParticleFilter;
 
 pub struct Game {
     key_pressed: bool,
@@ -18,7 +19,8 @@ pub struct Game {
     sim_gl: GlGraphics,
     robot: Robot,
     last_scan: Scan,
-    particle_filter: Particle, // will be replaced by particle filter
+    particle: Particle,
+    particle_filter: ParticleFilter,
     noise: Noise,
     pub render_config: RenderConfig,
     pub objects: Vec<geometry::Line>
@@ -32,7 +34,6 @@ impl Game {
         render_config: RenderConfig,
         robot: Robot,
         last_scan: Scan,
-        particle_filter: Particle,
         objects: Vec<geometry::Line>
     ) -> Game {
 
@@ -42,6 +43,9 @@ impl Game {
             std_dev_laser: 0.01
         };
 
+        let particle_filter = ParticleFilter::default();
+        let particle = particle_filter.best_particle.clone();
+
         Game {
             key_pressed: false,
             count: 0,
@@ -49,6 +53,7 @@ impl Game {
             render_config,
             robot,
             last_scan,
+            particle,
             particle_filter,
             noise,
             objects
@@ -87,7 +92,7 @@ impl Game {
         let objects = &self.objects;
         let robot = &self.robot;
         let pointcloud = &self.last_scan.to_pointcloud(&robot.odom.pose);
-        let particle_filter = &self.particle_filter;
+        let best_particle = &self.particle_filter.best_particle;
 
         self.sim_gl.draw(args.viewport(), |c, gl| {
             let transform = c.transform.trans(x,y);
@@ -104,7 +109,7 @@ impl Game {
             pointcloud.draw(render_config, transform, gl);
 
             // draw the internal state of the particle filter
-            particle_filter.draw(render_config, transform, gl);
+            best_particle.draw(render_config, transform, gl);
         });
     }
 
@@ -124,7 +129,11 @@ impl Game {
             );
 
             // run perception algorithm / particle filter
-            self.particle_filter.cycle(&sampled_scan, &sampled_pose);
+            //self.particle.cycle(&sampled_scan, &sampled_pose); // noisy
+            //self.particle.cycle(&sampled_scan, &self.robot.odom.pose.clone()); // perfect
+
+            self.particle_filter.cycle(&sampled_scan, &self.robot.latest_gain);
+
         }
         self.key_pressed = false;
     }
@@ -135,6 +144,7 @@ impl Game {
         let pose_drift = (self.count as f64) * self.noise.pose_drift;
 
         let apply_pose_noise = |p: Pose, sig: f64| {
+            println!("in apply pose noise");
             Pose {
                 position: Point {
                     x: gaussian(p.position.x + pose_drift, sig),
@@ -152,8 +162,8 @@ impl Game {
             scan
         };
 
-        let scan = apply_scan_noise(scan, self.noise.std_dev_laser);
-        let pose  = apply_pose_noise(pose, self.noise.std_dev_pose);
+        // let scan = apply_scan_noise(scan, self.noise.std_dev_laser);
+        // let pose  = apply_pose_noise(pose, self.noise.std_dev_pose);
 
         (pose, scan)
     }

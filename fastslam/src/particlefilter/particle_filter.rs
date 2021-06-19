@@ -17,20 +17,20 @@ pub struct ParticleFilter {
     timer: Timer,
     n_particles: usize,
     particles: Vec<Particle>,
-    pub gridmap: GridMap,
-    pub pose_estimate: Pose
+    pub best_particle: Particle
 }
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 50;
+        let n_particles: usize = 10;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
         let init_gridmap = GridMap::default();
         let init_pose = Pose::default();
+        let init_particle = Particle::new(init_pose.clone(), 1.0, init_gridmap.clone());
         for _ in 0..n_particles {
-            particles.push(Particle::new(init_pose.clone(), 1.0, init_gridmap.clone()));
+            particles.push(init_particle.clone());
         }
 
         assert_eq!(particles.len(), n_particles);
@@ -39,9 +39,8 @@ impl Default for ParticleFilter {
             simulation: true,
             timer: Timer::init_time(),
             n_particles,
-            particles: vec![],
-            gridmap: init_gridmap,
-            pose_estimate: init_pose
+            particles,
+            best_particle: init_particle
         }
     }
 }
@@ -54,7 +53,7 @@ impl ParticleFilter {
     /// particles: S_t-1 - the sample set of the previous step
     /// scan: z_t - the most recent laser scan
     /// gain: u_t-1 - the most recent gain, applied in the previous step
-    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) -> Particle {
+    pub fn cycle(&mut self, scan: &Scan, gain: &Twist) {
 
         let dt = if self.simulation {
             1.0 // 1.0s runs nicely with the simulator
@@ -76,18 +75,19 @@ impl ParticleFilter {
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
                 // to compute a pose estimate x*_t
-                let curr_pointcloud = scan.to_pointcloud(&p.pose);
+                let curr_pointcloud = scan.to_pointcloud(&motion_model_pose);
                 if p.prev_pointcloud.size() == 0 {
                     p.prev_pointcloud = curr_pointcloud.clone();
                 }
+                // println!("pose corr: {}", pose_correction);
 
-                let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
-                let scan_match_pose = motion_model_pose + pose_correction;
+                let scan_match_pose = motion_model_pose; // + pose_correction;
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let std_dev_sampling = Pose::new(Point::new(1.0, 1.0), 0.05);
-                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 10);
+                let std_dev_sampling = Pose::new(Point::new(0.05, 0.05), 0.03);
+
+                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 20);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
@@ -109,7 +109,7 @@ impl ParticleFilter {
             });
 
         // Get highest weight particle before resampling
-        let best_estimate: Particle = Self::get_highest_weight_particle(&self.particles);
+        self.best_particle = Self::get_highest_weight_particle(&self.particles);
 
         // step 7.)
         // compute efficient number of particles and resample based on
@@ -122,8 +122,6 @@ impl ParticleFilter {
             let resampled_particles = low_variance_sampler(&self.particles);
             self.particles = resampled_particles;
         }
-
-        return best_estimate
     }
 
     pub fn compute_neff(particles: &Vec<Particle>) -> f64 {
@@ -136,16 +134,23 @@ impl ParticleFilter {
     }
 
     fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
-        return particles
+        let particle = particles
             .iter()
             .map(|p| (p.weight, p.clone()) )
             .into_iter()
-            .max_by(|x, y| x.0.partial_cmp(&y.0).unwrap())
-            .unwrap().1
+            .max_by(|x, y| match x.0.partial_cmp(&y.0) {
+                Some(max) => max,
+                None => panic!("Unable to get highest weight particle")
+            });
+
+        return match particle {
+            Some((_, v)) => v,
+            None => panic!("Could not get particle from key-value pair")
+        }
     }
 
     #[allow(non_snake_case)]
-    fn sample_distribution(mean: &Pose, std_dev: Pose, K: usize) -> Vec<Pose> {
+    pub fn sample_distribution(mean: &Pose, std_dev: Pose, K: usize) -> Vec<Pose> {
         let mut samples: Vec<Pose> = Vec::with_capacity(K);
         for _ in 0..K {
             let x = gaussian(mean.position.x, std_dev.position.x);
@@ -179,17 +184,21 @@ impl ParticleFilter {
 
         // TODO: Run this in parallel
         sampled_poses.into_iter().for_each(|x_j: &Pose| {
-            let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
+            let p_x = 1.0; //motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
             let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
+
             mu += *x_j * p_z * p_x;
             eta += p_z * p_x;
+
 
             // to avoid re-computing, keep a cache
             poses_with_distribution.push(PoseWithDistribution { pose: *x_j, p_z, p_x });
         });
 
         // get final estimate of mean pose by normalizing the mean using normalization factor
-        mu = mu / eta;
+        if eta > 0.0 {
+            mu = mu / eta;
+        }
 
         let mut sigma = Pose::default(); // (0,0,0)
 
@@ -199,7 +208,9 @@ impl ParticleFilter {
         });
 
         // get final estimate of sigma (pose variance)
-        sigma = sigma / eta;
+        if eta > 0.0 {
+            sigma = sigma / eta;
+        }
 
         // sample final particle pose
         let improved_pose = match Self::sample_distribution(&mu, sigma.sqrt(), 1).first() {

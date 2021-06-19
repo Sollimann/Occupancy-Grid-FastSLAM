@@ -21,13 +21,15 @@ pub trait MotionModel {
         let mut ds = gain.velocity.x * dt;
         let mut dyaw = gain.angular * dt;
 
-        if ds != 0.0 {
-            ds = gaussian(ds, 0.001);
-        }
-
-        if dyaw != 0.0 {
-            dyaw = gaussian(dyaw, 0.001);
-        }
+        // if ds != 0.0 {
+        //     println!("in sample motion ds");
+        //     ds = gaussian(ds, 0.001);
+        // }
+        //
+        // if dyaw != 0.0 {
+        //     println!("in sample motion dyaw");
+        //     dyaw = gaussian(dyaw, 0.001);
+        // }
 
         let heading = Self::wrap_heading(pose.heading + dyaw);
 
