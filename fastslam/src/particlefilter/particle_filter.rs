@@ -22,7 +22,7 @@ pub struct ParticleFilter {
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 10;
+        let n_particles: usize = 30;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
@@ -70,7 +70,7 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt);
+                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt, true);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -79,13 +79,13 @@ impl ParticleFilter {
                 if p.prev_pointcloud.size() == 0 {
                     p.prev_pointcloud = curr_pointcloud.clone();
                 }
-                // println!("pose corr: {}", pose_correction);
 
-                let scan_match_pose = motion_model_pose; // + pose_correction;
+                // let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
+                let scan_match_pose = motion_model_pose; //p.pose + pose_correction;
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let std_dev_sampling = Pose::new(Point::new(0.05, 0.05), 0.03);
+                let std_dev_sampling = Pose::new(Point::new(0.03, 0.03), 0.01);
 
                 let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 20);
 
@@ -134,6 +134,8 @@ impl ParticleFilter {
     }
 
     fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
+        println!("particles: {:?}", particles);
+
         let particle = particles
             .iter()
             .map(|p| (p.weight, p.clone()) )

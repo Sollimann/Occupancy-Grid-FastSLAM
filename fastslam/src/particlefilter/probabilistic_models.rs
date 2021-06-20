@@ -23,7 +23,7 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
     // motion noise params
     // alpha_1:2: angular error
     // alpha_3:4: translational error
-    let alpha = [0.0015, 0.45, 0.75, 0.75, 0.0, 0.0]; // these values can be tuned
+    let alpha = [0.0015, 0.0045, 0.0075, 0.0075, 0.0, 0.0]; // these values can be tuned
 
     let v = gain.velocity.x;
     let omega = gain.angular;

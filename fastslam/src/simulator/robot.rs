@@ -21,8 +21,8 @@ pub struct Robot {
 impl Default for Robot {
     fn default() -> Robot {
         Robot {
-            u: 0.05,
-            w: 0.07,
+            u: 0.15,
+            w: 0.08,
             odom: Odometry::default(),
             latest_gain: Twist::default(),
             laser_scanner: LaserScanner { num_columns: 100}
@@ -48,7 +48,7 @@ impl Robot {
 
                 let gain = Twist { velocity: Vector { x: ds, y: 0.0 }, angular: dyaw };
                 self.latest_gain = gain.clone();
-                self.odom.pose = Self::sample_motion_model_velocity(&self.odom.pose, &gain, 1.0);
+                self.odom.pose = Self::sample_motion_model_velocity(&self.odom.pose, &gain, 1.0, true);
             },
             None => (),
         }

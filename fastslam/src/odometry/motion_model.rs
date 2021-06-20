@@ -17,19 +17,17 @@ pub trait MotionModel {
         angle
     }
 
-    fn sample_motion_model_velocity(pose: &Pose, gain: &Twist, dt: f64) -> Pose {
+    fn sample_motion_model_velocity(pose: &Pose, gain: &Twist, dt: f64, apply_noise: bool) -> Pose {
         let mut ds = gain.velocity.x * dt;
         let mut dyaw = gain.angular * dt;
 
-        // if ds != 0.0 {
-        //     println!("in sample motion ds");
-        //     ds = gaussian(ds, 0.001);
-        // }
-        //
-        // if dyaw != 0.0 {
-        //     println!("in sample motion dyaw");
-        //     dyaw = gaussian(dyaw, 0.001);
-        // }
+        if ds != 0.0 && apply_noise {
+            ds = gaussian(ds, 0.02);
+        }
+
+        if dyaw != 0.0 && apply_noise {
+            dyaw = gaussian(dyaw, 0.01);
+        }
 
         let heading = Self::wrap_heading(pose.heading + dyaw);
 

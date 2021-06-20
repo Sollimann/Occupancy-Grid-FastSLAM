@@ -147,10 +147,10 @@ impl Game {
             println!("in apply pose noise");
             Pose {
                 position: Point {
-                    x: gaussian(p.position.x + pose_drift, sig),
-                    y: gaussian(p.position.y + pose_drift, sig)
+                    x: gaussian(p.position.x , sig),
+                    y: gaussian(p.position.y, sig)
                 },
-                heading: gaussian(p.heading + pose_drift, sig)
+                heading: gaussian(p.heading, sig)
             }
         };
 
