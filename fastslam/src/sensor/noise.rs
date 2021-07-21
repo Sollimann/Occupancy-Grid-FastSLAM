@@ -1,8 +1,7 @@
 use rand_distr::{Normal, Distribution};
 
 pub struct Noise {
-    pub pose_drift: f64,
-    pub std_dev_pose: f64,
+    pub std_dev_gain: f64,
     pub std_dev_laser: f64
 }
 

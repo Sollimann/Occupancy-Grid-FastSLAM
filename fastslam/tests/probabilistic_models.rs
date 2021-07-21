@@ -230,3 +230,35 @@ fn test_motion_model_velocity() {
     assert!(prob_sample_accurate > prob_sample_undercompensated);
     assert!(prob_sample_undercompensated > prob_sample_overcompensated);
 }
+
+#[test]
+fn test_motion_model_velocity_2() {
+
+    let prev_pose = Pose::new(Point::new(0.0, 0.0), 0.0);
+    let prev_gain = Twist::new(Vector::new(0.15, 0.0), 0.0);
+    let curr_pose = Pose::new(Point::new(0.15, 0.0000001), 0.0000001);
+
+    let prob_sample_overcompensated = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        0.8);
+
+    let prob_sample_accurate = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        1.0);
+
+    let prob_sample_undercompensated = motion_model_velocity(
+        &curr_pose,
+        &prev_pose,
+        &prev_gain,
+        1.2);
+
+    println!("accurate: {}", prob_sample_accurate);
+    println!("undercompensated: {}", prob_sample_undercompensated);
+    println!("overcompensated: {}", prob_sample_overcompensated);
+    // assert!(prob_sample_accurate > prob_sample_undercompensated);
+    // assert!(prob_sample_undercompensated > prob_sample_overcompensated);
+}

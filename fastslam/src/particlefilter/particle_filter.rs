@@ -22,7 +22,7 @@ pub struct ParticleFilter {
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 30;
+        let n_particles: usize = 20;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
@@ -70,30 +70,39 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt, true);
+                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
                 // to compute a pose estimate x*_t
                 let curr_pointcloud = scan.to_pointcloud(&motion_model_pose);
-                if p.prev_pointcloud.size() == 0 {
-                    p.prev_pointcloud = curr_pointcloud.clone();
-                }
+                let scan_match_pose = if p.prev_pointcloud.size() == 0 {
+                    motion_model_pose
+                } else {
+                    let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
+                    p.prev_pose_correction = pose_correction;
+                    // p.pose + pose_correction
+                    motion_model_pose
+                };
 
-                // let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
-                let scan_match_pose = motion_model_pose; //p.pose + pose_correction;
+                // println!("scan match pose: {:?}", scan_match_pose);
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let std_dev_sampling = Pose::new(Point::new(0.03, 0.03), 0.01);
+                let translational_range = &gain.velocity.x * dt * 0.1;
+                let angular_range = &gain.angular * dt * 0.1;
+                // println!("trans range: {}", translational_range);
+                // println!("ang range: {}", angular_range);
+                let std_dev_sampling = Pose::new(Point::new(translational_range, translational_range), angular_range);
 
-                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 20);
+                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 30);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
                 // improved proposal distribution
                 let (improved_pose, eta) = Self::improved_proposal(
                     &pose_samples,
+                    &scan_match_pose,
                     &p.pose,
                     &p.gridmap,
                     &scan,
@@ -106,10 +115,15 @@ impl ParticleFilter {
                 p.weight = p.weight * eta;
                 p.gridmap.update(&improved_pose, scan); // updating the map according to the drawn pose x_t and the observation z_t
                 p.pose = improved_pose;
+                p.prev_pointcloud = curr_pointcloud
             });
 
         // Get highest weight particle before resampling
         self.best_particle = Self::get_highest_weight_particle(&self.particles);
+
+        println!("best pose: {:?}", self.best_particle.pose);
+        println!("best weight: {:?}", self.best_particle.weight);
+        println!("pose correction: {:?}", self.best_particle.prev_pose_correction);
 
         // step 7.)
         // compute efficient number of particles and resample based on
@@ -119,8 +133,9 @@ impl ParticleFilter {
         // TODO: do not perform resampling if robot hasn't moved since last step
         // could check if gain = 0.0
         if Neff < (*&self.particles.len() as f64) / 2.0 {
-            let resampled_particles = low_variance_sampler(&self.particles);
-            self.particles = resampled_particles;
+            println!("RESAMPLE!!");
+            // let resampled_particles = low_variance_sampler(&self.particles);
+            // self.particles = resampled_particles;
         }
     }
 
@@ -134,7 +149,7 @@ impl ParticleFilter {
     }
 
     fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
-        println!("particles: {:?}", particles);
+        // println!("particles: {:?}", particles);
 
         let particle = particles
             .iter()
@@ -166,6 +181,7 @@ impl ParticleFilter {
 
     fn improved_proposal(
         sampled_poses: &Vec<Pose>,
+        curr_particle_pose: &Pose,
         prev_particle_pose: &Pose,
         prev_gridmap: &GridMap,
         scan: &Scan,
@@ -186,8 +202,8 @@ impl ParticleFilter {
 
         // TODO: Run this in parallel
         sampled_poses.into_iter().for_each(|x_j: &Pose| {
-            let p_x = 1.0; //motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
-            let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
+            let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
+            let p_z = 1.0; //likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
 
             mu += *x_j * p_z * p_x;
             eta += p_z * p_x;

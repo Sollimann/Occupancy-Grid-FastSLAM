@@ -69,6 +69,9 @@ fn main() {
         }
     }
 
+    // Update the particle filter
+    // game.init();
+
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
 

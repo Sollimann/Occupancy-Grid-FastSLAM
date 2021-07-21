@@ -23,7 +23,7 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
     // motion noise params
     // alpha_1:2: angular error
     // alpha_3:4: translational error
-    let alpha = [0.0015, 0.0045, 0.0075, 0.0075, 0.0, 0.0]; // these values can be tuned
+    let alpha = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]; // these values can be tuned
 
     let v = gain.velocity.x;
     let omega = gain.angular;
@@ -54,7 +54,7 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
     let p1 = prob_normal_distribution(v - v_hat, alpha[0]*v.powi(2) + alpha[1] * omega.powi(2));
     let p2 = prob_normal_distribution(omega - omega_hat, alpha[2]*v.powi(2) + alpha[3] * omega.powi(2));
     let p3 = prob_normal_distribution(gamma_hat, alpha[4]*v.powi(2) + alpha[5]*omega.powi(2));
-    return p1 * p2 // p1 * p2 * p3
+    return p1 * p2 * p3
 }
 
 /// Computes the measurement model probability
