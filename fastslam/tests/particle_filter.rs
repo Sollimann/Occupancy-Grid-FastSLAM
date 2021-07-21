@@ -11,6 +11,6 @@ fn test_sample_distribution() {
 
     let std_dev_sampling = Pose::new(Point::new(0.05, 0.05), 0.05);
 
-    let pose_samples: Vec<Pose> = ParticleFilter::sample_distribution(&init_pose, std_dev_sampling, 10);
+    let pose_samples: Vec<Pose> = ParticleFilter::sample_gaussian_distribution(&init_pose, std_dev_sampling, 10);
     println!("pose samples: {:?}", pose_samples);
 }

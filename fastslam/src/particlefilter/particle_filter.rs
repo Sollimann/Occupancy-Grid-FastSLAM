@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use crate::math::timer::Timer;
 use crate::scanmatching::icp::icp;
 use crate::geometry::Point;
-use crate::sensor::noise::gaussian;
+use crate::sensor::noise::{gaussian, uniform};
 use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
 use crate::particlefilter::resampling::low_variance_sampler;
 
@@ -22,7 +22,7 @@ pub struct ParticleFilter {
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 30;
+        let n_particles: usize = 15;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
@@ -70,7 +70,7 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt, true);
+                let motion_model_pose = Self::sample_motion_model_velocity_v2(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -80,14 +80,15 @@ impl ParticleFilter {
                     p.prev_pointcloud = curr_pointcloud.clone();
                 }
 
-                // let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
-                let scan_match_pose = motion_model_pose; //p.pose + pose_correction;
+                // let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 10, 0.000001);
+                // let scan_match_pose = p.pose + pose_correction; // motion_model_pose
+                let scan_match_pose = motion_model_pose;
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let std_dev_sampling = Pose::new(Point::new(0.03, 0.03), 0.01);
+                let sampling_interval = Pose::new(Point::new(0.04, 0.04), 0.01);
 
-                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 20);
+                let pose_samples: Vec<Pose> = Self::sample_uniform_distribution(&scan_match_pose, sampling_interval, 70);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
@@ -103,7 +104,8 @@ impl ParticleFilter {
 
                 // step 5 & 6.)
                 // update the importance weights, pose and map for particle
-                p.weight = p.weight * eta;
+                let new_weight = p.weight * eta;
+                p.weight = if new_weight.is_nan() {f64::INFINITY} else { new_weight };
                 p.gridmap.update(&improved_pose, scan); // updating the map according to the drawn pose x_t and the observation z_t
                 p.pose = improved_pose;
             });
@@ -134,7 +136,7 @@ impl ParticleFilter {
     }
 
     fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
-        println!("particles: {:?}", particles);
+        // println!("particles: {:?}", particles);
 
         let particle = particles
             .iter()
@@ -145,6 +147,8 @@ impl ParticleFilter {
                 None => panic!("Unable to get highest weight particle")
             });
 
+        // println!("largest weight particle: {:?}", particle);
+
         return match particle {
             Some((_, v)) => v,
             None => panic!("Could not get particle from key-value pair")
@@ -152,12 +156,25 @@ impl ParticleFilter {
     }
 
     #[allow(non_snake_case)]
-    pub fn sample_distribution(mean: &Pose, std_dev: Pose, K: usize) -> Vec<Pose> {
+    pub fn sample_gaussian_distribution(mean: &Pose, std_dev: Pose, K: usize) -> Vec<Pose> {
         let mut samples: Vec<Pose> = Vec::with_capacity(K);
         for _ in 0..K {
             let x = gaussian(mean.position.x, std_dev.position.x);
             let y = gaussian(mean.position.y, std_dev.position.y);
             let theta = gaussian(mean.heading, std_dev.heading);
+            let p = Pose::new(Point { x, y }, theta);
+            samples.push(p)
+        }
+        samples
+    }
+
+    #[allow(non_snake_case)]
+    pub fn sample_uniform_distribution(mean: &Pose, interval: Pose, K: usize) -> Vec<Pose> {
+        let mut samples: Vec<Pose> = Vec::with_capacity(K);
+        for _ in 0..K {
+            let x = uniform(mean.position.x, interval.position.x);
+            let y = uniform(mean.position.y, interval.position.y);
+            let theta = uniform(mean.heading, interval.heading);
             let p = Pose::new(Point { x, y }, theta);
             samples.push(p)
         }
@@ -186,8 +203,10 @@ impl ParticleFilter {
 
         // TODO: Run this in parallel
         sampled_poses.into_iter().for_each(|x_j: &Pose| {
-            let p_x = 1.0; //motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
+            let p_x = motion_model_velocity(&x_j, prev_particle_pose, gain, dt);
             let p_z = likelihood_field_range_finder_model(scan, &x_j, prev_gridmap);
+
+            // println!("p_x: {} , p_z: {}", p_x, p_z);
 
             mu += *x_j * p_z * p_x;
             eta += p_z * p_x;
@@ -215,7 +234,7 @@ impl ParticleFilter {
         }
 
         // sample final particle pose
-        let improved_pose = match Self::sample_distribution(&mu, sigma.sqrt(), 1).first() {
+        let improved_pose = match Self::sample_gaussian_distribution(&mu, sigma.sqrt(), 1).first() {
             None => panic!("could not sample new pose!"),
             Some(p) => *p
         };
