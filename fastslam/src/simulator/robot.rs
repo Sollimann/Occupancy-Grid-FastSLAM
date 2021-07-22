@@ -48,8 +48,8 @@ impl Robot {
 
                 let gain = Twist { velocity: Vector { x: ds, y: 0.0 }, angular: dyaw };
                 self.latest_gain = gain.clone();
-                self.odom.pose = Self::sample_motion_model_velocity(&self.odom.pose, &gain, 1.0);
-                // self.odom.pose = Self::drive(&self.odom.pose, &gain, 1.0);
+                // self.odom.pose = Self::sample_motion_model_velocity(&self.odom.pose, &gain, 1.0);
+                self.odom.pose = Self::drive(&self.odom.pose, &gain, 1.0);
             },
             None => (),
         }

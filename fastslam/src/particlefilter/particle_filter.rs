@@ -8,7 +8,7 @@ use crate::scanmatching::icp::icp;
 use crate::geometry::Point;
 use crate::sensor::noise::gaussian;
 use crate::particlefilter::probabilistic_models::{motion_model_velocity, likelihood_field_range_finder_model};
-use crate::particlefilter::resampling::low_variance_sampler;
+use crate::particlefilter::resampling::{low_variance_sampler, resampler};
 
 
 #[derive(Clone)]
@@ -22,7 +22,7 @@ pub struct ParticleFilter {
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 20;
+        let n_particles: usize = 15;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
@@ -70,7 +70,8 @@ impl ParticleFilter {
 
                 // step 1.)
                 // initial guess of pose x'_ based on motion model
-                let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt);
+                // let motion_model_pose = Self::sample_motion_model_velocity(&p.pose, &gain, dt);
+                let motion_model_pose = Self::drive(&p.pose, &gain, dt);
 
                 // step 2.)
                 // scan-matching using the initial guess x'_t and the latest scan m_t
@@ -89,13 +90,13 @@ impl ParticleFilter {
 
                 // step 3.)
                 // sample points around the pose x*_t
-                let translational_range = &gain.velocity.x * dt * 0.1;
-                let angular_range = &gain.angular * dt * 0.1;
+                let translational_range = &gain.velocity.x * dt * 0.05;
+                let angular_range = &gain.angular * dt * 0.05;
                 // println!("trans range: {}", translational_range);
                 // println!("ang range: {}", angular_range);
                 let std_dev_sampling = Pose::new(Point::new(translational_range, translational_range), angular_range);
 
-                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 30);
+                let pose_samples: Vec<Pose> = Self::sample_distribution(&scan_match_pose, std_dev_sampling, 50);
 
                 // step 4.)
                 // compute new pose x_t drawn from the gaussian approximation of the
@@ -135,7 +136,8 @@ impl ParticleFilter {
         if Neff < (*&self.particles.len() as f64) / 2.0 {
             println!("RESAMPLE!!");
             // let resampled_particles = low_variance_sampler(&self.particles);
-            // self.particles = resampled_particles;
+            let resampled_particles = resampler(&self.particles);
+            self.particles = resampled_particles;
         }
     }
 
@@ -149,9 +151,7 @@ impl ParticleFilter {
     }
 
     fn get_highest_weight_particle(particles: &Vec<Particle>) -> Particle {
-        // println!("particles: {:?}", particles);
-
-        let particle = particles
+        let result = particles
             .iter()
             .map(|p| (p.weight, p.clone()) )
             .into_iter()
@@ -160,10 +160,17 @@ impl ParticleFilter {
                 None => panic!("Unable to get highest weight particle")
             });
 
-        return match particle {
-            Some((_, v)) => v,
+
+        let particle = match result {
+            Some((_, p)) => p,
             None => panic!("Could not get particle from key-value pair")
-        }
+        };
+
+        let index = particles.iter().position(|p| p.weight == particle.weight).unwrap();
+
+        println!("found max importance weight at index: {}", index);
+
+        return particle
     }
 
     #[allow(non_snake_case)]
