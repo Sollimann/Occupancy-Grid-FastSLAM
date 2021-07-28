@@ -75,8 +75,6 @@ pub fn best_fit_transform(A: &PointCloud, B: &PointCloud) -> (M3x3, M2x2, V2) {
     let t3: na::Vector3<f64> = t.fixed_resize(1.0);
     T.set_column(2, &t3);
 
-
-
     return (T, R, t)
 }
 
@@ -203,9 +201,8 @@ pub fn icp(A: &PointCloud, B: &PointCloud, max_iterations: usize, tolerance: f64
     };
 
     // Homogeneous transformation matrix
-    let (T, _, _) = best_fit_transform(A, &A_trans);
-
-    return to_pose(T);
+    let (T, R, t) = best_fit_transform(A, &A_trans);
+    return to_pose(R, t);
 }
 
 #[allow(non_snake_case)]
@@ -222,7 +219,7 @@ fn from_na_homogeneous(A_hom: &na::OMatrix<f64, Dynamic, U3>) -> PointCloud {
 }
 
 #[allow(non_snake_case)]
-fn to_pose(T: M3x3) -> Pose {
+fn to_pose_old(T: M3x3) -> Pose {
     // vec of size 9
     let row: Vec<f64> = T.row_iter()
         .flat_map(|row| {
@@ -241,6 +238,16 @@ fn to_pose(T: M3x3) -> Pose {
     let dx = T_02;
     let dy = T_12;
     let dyaw = T_10.atan2(T_00); // atan2(y, x);
+
+    Pose:: new(Point::new(dx, dy), dyaw)
+}
+
+#[allow(non_snake_case)]
+fn to_pose(R: M2x2, t: V2) -> Pose {
+
+    let dx = t[(0)];
+    let dy = t[(1)];
+    let dyaw = R[(1,0)].atan2(R[(0,0)]); // atan2(y, x);
 
     Pose:: new(Point::new(dx, dy), dyaw)
 }

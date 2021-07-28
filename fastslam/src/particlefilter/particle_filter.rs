@@ -22,7 +22,7 @@ pub struct ParticleFilter {
 
 impl Default for ParticleFilter {
     fn default() -> ParticleFilter {
-        let n_particles: usize = 15;
+        let n_particles: usize = 25;
         let mut particles: Vec<Particle> = vec![];
 
         // initialize particle list
@@ -80,7 +80,7 @@ impl ParticleFilter {
                 let scan_match_pose = if p.prev_pointcloud.size() == 0 {
                     motion_model_pose
                 } else {
-                    let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.0001);
+                    let pose_correction = icp(&curr_pointcloud, &p.prev_pointcloud, 20, 0.00000000001);
                     p.prev_pose_correction = pose_correction;
                     // p.pose + pose_correction
                     motion_model_pose
