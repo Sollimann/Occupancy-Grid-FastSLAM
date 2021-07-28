@@ -5,6 +5,7 @@ There seems to be an issue that the scan-matcher does not return probable transf
 
 Scan-matching tries to incrementally align two scans or a map to a scan, without revising the past/map.
 
+* PRO TIP: Outlier detection. Remove outliers from the pointcloud
 
 * During filtering, it can happen that the scan-matching process fails because of poor observations or a too small
   overlapping area between the current scan and the previously computed map
@@ -24,3 +25,8 @@ Scan-matching tries to incrementally align two scans or a map to a scan, without
 
 * Make sure the resampling method is correct
 * Have a look at the python RBPF SLAM implementation and compare the functions to look for errors
+
+### Issue 5: Simulation of laser
+
+* If you constantly turn the robot, the laser scan produces an offset. This could be a potential
+source of error
