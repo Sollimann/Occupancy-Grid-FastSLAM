@@ -1,4 +1,4 @@
-# Occupancy Grid FastSLAM
+# Occupancy Grid FastSLAM (PS! in development)
 A FastSLAM algorithm for Occupancy Grid Maps based on Rao-Blackwellized Particle Filters
 
 1. [Consume](#consume)
