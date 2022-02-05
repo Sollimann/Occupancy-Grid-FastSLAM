@@ -7,10 +7,11 @@ use piston_window::{RenderArgs, Key};
 use graphics::{Transformed};
 use piston::UpdateArgs;
 use fastslam::simulator::Direction;
-use fastslam::odometry::Pose;
+use fastslam::odometry::{Pose, Twist};
 use fastslam::sensor::noise::{Noise, gaussian};
-use fastslam::geometry::Point;
+use fastslam::geometry::{Point, Vector};
 use fastslam::particlefilter::particle::Particle;
+use fastslam::particlefilter::particle_filter::ParticleFilter;
 
 pub struct Game {
     key_pressed: bool,
@@ -18,7 +19,8 @@ pub struct Game {
     sim_gl: GlGraphics,
     robot: Robot,
     last_scan: Scan,
-    particle_filter: Particle, // will be replaced by particle filter
+    particle: Particle,
+    particle_filter: ParticleFilter,
     noise: Noise,
     pub render_config: RenderConfig,
     pub objects: Vec<geometry::Line>
@@ -32,15 +34,16 @@ impl Game {
         render_config: RenderConfig,
         robot: Robot,
         last_scan: Scan,
-        particle_filter: Particle,
         objects: Vec<geometry::Line>
     ) -> Game {
 
         let noise = Noise {
-            pose_drift: 0.0005,
-            std_dev_pose: 0.05,
+            std_dev_gain: 0.01,
             std_dev_laser: 0.01
         };
+
+        let particle_filter = ParticleFilter::default();
+        let particle = particle_filter.best_particle.clone();
 
         Game {
             key_pressed: false,
@@ -49,6 +52,7 @@ impl Game {
             render_config,
             robot,
             last_scan,
+            particle,
             particle_filter,
             noise,
             objects
@@ -87,7 +91,7 @@ impl Game {
         let objects = &self.objects;
         let robot = &self.robot;
         let pointcloud = &self.last_scan.to_pointcloud(&robot.odom.pose);
-        let particle_filter = &self.particle_filter;
+        let best_particle = &self.particle_filter.best_particle;
 
         self.sim_gl.draw(args.viewport(), |c, gl| {
             let transform = c.transform.trans(x,y);
@@ -104,7 +108,7 @@ impl Game {
             pointcloud.draw(render_config, transform, gl);
 
             // draw the internal state of the particle filter
-            particle_filter.draw(render_config, transform, gl);
+            best_particle.draw(render_config, transform, gl);
         });
     }
 
@@ -118,29 +122,36 @@ impl Game {
 
         // apply noise
         if self.key_pressed {
-            let (sampled_pose, sampled_scan) = self.apply_noise_and_drift(
-                self.robot.odom.pose.clone(),
+            let (gain_noisy, scan_noisy) = self.apply_noise(
+                self.robot.latest_gain.clone(),
                 self.last_scan.clone()
             );
 
             // run perception algorithm / particle filter
-            self.particle_filter.cycle(&sampled_scan, &sampled_pose);
+            //self.particle.cycle(&sampled_scan, &sampled_pose); // noisy
+            //self.particle.cycle(&sampled_scan, &self.robot.odom.pose.clone()); // perfect
+
+            self.particle_filter.cycle(&self.last_scan, &gain_noisy);
+
         }
         self.key_pressed = false;
     }
 
-    fn apply_noise_and_drift(&mut self, pose: Pose, scan: Scan) -> (Pose, Scan) {
-        self.count += 1;
+    fn apply_noise(&mut self, gain: Twist, scan: Scan) -> (Twist, Scan) {
 
-        let pose_drift = (self.count as f64) * self.noise.pose_drift;
 
-        let apply_pose_noise = |p: Pose, sig: f64| {
-            Pose {
-                position: Point {
-                    x: gaussian(p.position.x + pose_drift, sig),
-                    y: gaussian(p.position.y + pose_drift, sig)
-                },
-                heading: gaussian(p.heading + pose_drift, sig)
+        let apply_gain_noise = |u: Twist| {
+            let alpha = [0.0015, 0.0015, 0.0015, 0.0015, 0.0, 0.0]; // these values can be tuned
+            let v = u.velocity.x;
+            let omega = u.angular;
+            let v_hat = gaussian(v, (alpha[0] * v.powi(2) + alpha[1] * omega.powi(2)).sqrt());
+            let omega_hat = gaussian(omega, (alpha[2] * v.powi(2) + alpha[3] * omega.powi(2)).sqrt());
+
+            Twist {
+                velocity: Vector {
+                    x: v_hat,
+                    y: 0.0 },
+                angular: omega_hat
             }
         };
 
@@ -152,9 +163,9 @@ impl Game {
             scan
         };
 
-        let scan = apply_scan_noise(scan, self.noise.std_dev_laser);
-        let pose  = apply_pose_noise(pose, self.noise.std_dev_pose);
+        // let scan_noisy = apply_scan_noise(scan, self.noise.std_dev_laser);
+        let gain_noisy  = apply_gain_noise(gain);
 
-        (pose, scan)
+        (gain_noisy, scan)
     }
 }

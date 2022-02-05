@@ -23,7 +23,8 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
     // motion noise params
     // alpha_1:2: angular error
     // alpha_3:4: translational error
-    let alpha = [0.0015, 0.45, 0.75, 0.75, 0.0, 0.0]; // these values can be tuned
+    let alpha = [0.0015, 0.0015, 0.0015, 0.0015, 0.0, 0.0]; // these values can be tuned
+
 
     let v = gain.velocity.x;
     let omega = gain.angular;
@@ -78,10 +79,10 @@ pub fn motion_model_velocity(curr_sampled_pose: &Pose, prev_particle_pose: &Pose
 ///     q: probability (0.0 - 1.0+) does not need to be between 0-1
 pub fn likelihood_field_range_finder_model(scan: &Scan, curr_sampled_pose: &Pose, prev_gridmap: &GridMap) -> f64 {
     // intrinsic parameters
-    let z_hit = 0.95; // range: (0.6-0.9)
+    let z_hit = 0.90; // range: (0.6-0.9)
     let z_max = 30.0; // maximum allowed sensor value
     let z_rand = 1.0 - z_hit; // random distance noise
-    let sigma_hit: f64 = 0.2; // [m] used in the z_hit part of the model.
+    let sigma_hit: f64 = 0.02; // [m] used in the z_hit part of the model.
     let mut q = 1.0;
 
     // filter out readings equal to or larger than max laser range
