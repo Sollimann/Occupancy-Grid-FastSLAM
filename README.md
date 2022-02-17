@@ -54,7 +54,11 @@ The concept of SLAM algorithms based on particle filters makes us of a factoriza
 
 #### Scan Matcher
 
+in short: Scan-matching tries to incrementally align two scans or a map to a scan, without revising the past/map.
+
+
 The scan matcher is to be seen as an additional component that ensures high-quality proposal distributions form which we sample the set of particles. Instead of relying solely on the usually rather uncertain odometry information, we incorporate the robot's lastest sensor readings into the computation. The scan matcher class implements an Iterative Closest Point matching algorithm that takes as an input the real laser scans as well as a set of estimated laser scans from the current map estimate and outputs a translational vector corresponding to the offset between the two scans. This pose correction can be used to improve the estimate of the particle's pose obtained from the prediction step.
+
 
 ### Sensor
 

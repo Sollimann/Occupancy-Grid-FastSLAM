@@ -311,3 +311,39 @@ fn test_icp_case_5() {
 
     assert_eq!(pose_relative_eq(pose_dif, pose_dif_expected, 1.0e-1), true);
 }
+
+#[test]
+#[allow(non_snake_case)]
+fn test_icp_case_6() {
+    let a = vec![
+        Point::new(2.1081734290318326, -0.024841726273664107),
+        Point::new(2.109651267036626, 0.09888161003103749),
+        Point::new(23.36624646262446, -37.136271615135135),
+        Point::new(163.31616161613, 135.13631617161361),
+        Point::new(-67.31616136, -60.136161361365136),
+        Point::new(1.0, 1.0),
+        Point::new(59.0, 59.0),
+    ];
+
+    let b = vec![
+        Point::new(3.1081734290318326, -1.024841726273664107),
+        Point::new(3.109651267036626, 1.09888161003103749),
+        Point::new(20.36624646262446, -40.136271615135135),
+        Point::new(160.31616161613, 130.13631617161361),
+        Point::new(-70.31616136, -63.136161361365136),
+        Point::new(3.0, 90.0),
+        Point::new(-3.0, 10.0)
+    ];
+
+    let A = PointCloud::new(a);
+    let B = PointCloud::new(b);
+
+
+    let pose_dif = icp(&A, &B, 20, 0.00001);
+
+    let pose_dif_expected = Pose::new(
+        Point { x: -10.729149492301724, y: 5.939548258818714 },
+        0.040479440439105514);
+
+    assert_eq!(pose_relative_eq(pose_dif, pose_dif_expected, 1.0e-1), true);
+}

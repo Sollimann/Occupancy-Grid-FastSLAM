@@ -132,6 +132,7 @@ impl GridMap {
 
         // if cell is outside grid, return None
         if c < 0 || c > self.map_size as i32 {
+            println!("index c: {} is outside of map", c);
             None
         } else {
             Some(c as usize)

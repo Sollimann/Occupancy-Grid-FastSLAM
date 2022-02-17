@@ -8,6 +8,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct Particle {
+    pub prev_pose_correction: Pose,
     pub prev_pointcloud: PointCloud,
     pub pose: Pose, // particle's pose (x, y, theta)
     pub weight: Scalar, // particle's current weight
@@ -18,6 +19,7 @@ pub struct Particle {
 impl Default for Particle {
     fn default() -> Self {
         Particle {
+            prev_pose_correction: Pose::default(),
             prev_pointcloud: PointCloud::empty(),
             pose: Pose::default(),
             weight: 1.0,
@@ -36,6 +38,7 @@ impl fmt::Debug for Particle {
 impl Particle {
     pub fn new(pose: Pose, weight: Scalar, gridmap: GridMap) -> Self {
         Particle {
+            prev_pose_correction: Pose::default(),
             prev_pointcloud: PointCloud::empty(),
             pose,
             weight,

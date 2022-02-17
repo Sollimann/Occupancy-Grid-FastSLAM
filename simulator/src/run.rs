@@ -36,7 +36,6 @@ fn main() {
         RenderConfig { scale: 20.0 },
         Robot::default(),
         Scan::empty(),
-        Particle::default(),
         vec![]
     );
 
@@ -70,19 +69,25 @@ fn main() {
         }
     }
 
+    // Update the particle filter
+    // game.init();
+
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
 
+        // Move the robot / apply gain to update robot pose
         if let Some(Button::Keyboard(key)) = e.press_args() {
             game.key_pressed(key);
         }
 
-        if let Some(a) = e.render_args() {
-            game.render(&a);
-        }
-
+        // Update the particle filter
         if let Some(a) = e.update_args() {
             game.update(&a);
+        }
+
+        // Render changes on screen
+        if let Some(a) = e.render_args() {
+            game.render(&a);
         }
 
         if let Some(a) = e.mouse_scroll_args() {
